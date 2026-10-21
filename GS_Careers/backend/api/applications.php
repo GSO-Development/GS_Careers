@@ -2411,10 +2411,11 @@ function handleViewCV()
     // Security: basename ensures no directory traversal
     $file = basename($file);
 
-    // Try both possible relative paths to be safe
+    // Try possible relative paths and external fallback to be safe
     $possiblePaths = [
         __DIR__ . '/../uploads/cv/' . $file,
-        dirname(__DIR__) . '/uploads/cv/' . $file
+        dirname(__DIR__) . '/uploads/cv/' . $file,
+        'C:/Users/nadumi/OneDrive - George Steuart Optimize Pvt Ltd/Documents/GS Careers CV/GS_Careers/backend/uploads/cv/' . $file
     ];
 
     $filePath = null;
