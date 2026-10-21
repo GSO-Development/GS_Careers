@@ -1,0 +1,96 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { getVacancies, getCompanies, API_BASE } from "../services/api";
+import { formatDate, daysLeft } from "../utils/constants";
+const BACKEND_ROOT = API_BASE.replace("/api", "");
+import {
+  FiMapPin,
+  FiBriefcase,
+  FiCalendar,
+  FiMenu,
+  FiX,
+  FiArrowRight,
+  FiAward,
+  FiUsers,
+  FiGlobe,
+  FiFacebook,
+  FiLinkedin,
+  FiUser
+} from "react-icons/fi";
+function HomePage() {
+  const [vacancies, setVacancies] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [vacRes, compRes] = await Promise.all([
+          getVacancies({ limit: 3 }),
+          getCompanies()
+        ]);
+        setVacancies(vacRes?.data?.data || []);
+        setCompanies(compRes?.data?.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll(".animate-on-scroll").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+  return /* @__PURE__ */ React.createElement("div", { className: "public-page home-landing" }, /* @__PURE__ */ React.createElement("nav", { className: "navbar" }, /* @__PURE__ */ React.createElement(Link, { to: "/", className: "navbar-brand" }, /* @__PURE__ */ React.createElement("img", { src: "/gs-logo.png", alt: "George Steuart & Co", className: "navbar-logo" }), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "navbar-title" }, "George Steuart"), /* @__PURE__ */ React.createElement("div", { className: "navbar-subtitle" }, "Careers"))), /* @__PURE__ */ React.createElement("div", { className: `navbar-links ${mobileMenuOpen ? "open" : ""}` }, /* @__PURE__ */ React.createElement(Link, { to: "/", className: "navbar-link active", onClick: closeMobileMenu }, "Home"), /* @__PURE__ */ React.createElement(Link, { to: "/vacancies", className: "navbar-link", onClick: closeMobileMenu }, "Vacancies"), /* @__PURE__ */ React.createElement(
+    Link,
+    {
+      to: "/admin/login",
+      className: "navbar-link admin-icon-link",
+      onClick: closeMobileMenu,
+      title: "Admin Portal",
+      "aria-label": "Admin Portal"
+    },
+    /* @__PURE__ */ React.createElement(FiUser, { size: 19 }),
+    /* @__PURE__ */ React.createElement("span", { className: "admin-link-text" }, "Admin Portal")
+  )), /* @__PURE__ */ React.createElement("button", { className: "mobile-menu-btn", onClick: () => setMobileMenuOpen((s) => !s) }, mobileMenuOpen ? /* @__PURE__ */ React.createElement(FiX, null) : /* @__PURE__ */ React.createElement(FiMenu, null))), /* @__PURE__ */ React.createElement("section", { className: "hero" }, /* @__PURE__ */ React.createElement("div", { className: "hero-bg-accent pulse" }), /* @__PURE__ */ React.createElement("div", { className: "hero-bg-accent-2" }), /* @__PURE__ */ React.createElement("div", { className: "hero-inner" }, /* @__PURE__ */ React.createElement("div", { className: "hero-left" }, /* @__PURE__ */ React.createElement("div", { className: "hero-badge animate-fade-in" }, /* @__PURE__ */ React.createElement(FiAward, { className: "badge-icon" }), /* @__PURE__ */ React.createElement("span", null, "ESTD. 1835 \u2014 190+ Years of Trust")), /* @__PURE__ */ React.createElement("h1", { className: "hero-title animate-slide-up" }, "Build Your Legacy ", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "title-accent" }, "With George Steuart")), /* @__PURE__ */ React.createElement("p", { className: "hero-subtitle animate-slide-up" }, "Join Sri Lanka's oldest mercantile firm and be part of a 190+ year heritage of excellence. We don't just offer jobs; we offer the chance to shape history."), /* @__PURE__ */ React.createElement("div", { className: "hero-actions animate-slide-up" }, /* @__PURE__ */ React.createElement(Link, { to: "/vacancies", className: "btn btn-gold btn-lg" }, "View Open Vacancies ", /* @__PURE__ */ React.createElement(FiArrowRight, null)), /* @__PURE__ */ React.createElement("a", { href: "#heritage", className: "btn btn-outline btn-lg" }, "Our Story"))), /* @__PURE__ */ React.createElement("div", { className: "hero-right" }, /* @__PURE__ */ React.createElement("div", { className: "hero-image-wrapper" }, /* @__PURE__ */ React.createElement("div", { className: "image-frame-decoration" }), /* @__PURE__ */ React.createElement(
+    "img",
+    {
+      src: "/hero-bg.jpg",
+      alt: "George Steuart Heritage & Team",
+      className: "hero-team-image"
+    }
+  ), /* @__PURE__ */ React.createElement("div", { className: "hero-floating-card animate-float" }, /* @__PURE__ */ React.createElement(FiUsers, null), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "1,500+"), /* @__PURE__ */ React.createElement("span", null, "Team")))))), /* @__PURE__ */ React.createElement("div", { className: "hero-stats-bar" }, /* @__PURE__ */ React.createElement("div", { className: "hero-stat" }, /* @__PURE__ */ React.createElement("div", { className: "hero-stat-number" }, vacancies.length, "+"), /* @__PURE__ */ React.createElement("div", { className: "hero-stat-label" }, "OPEN POSITIONS")), /* @__PURE__ */ React.createElement("div", { className: "hero-stat-divider" }), /* @__PURE__ */ React.createElement("div", { className: "hero-stat" }, /* @__PURE__ */ React.createElement("div", { className: "hero-stat-number" }, companies.length), /* @__PURE__ */ React.createElement("div", { className: "hero-stat-label" }, "SUBSIDIARIES")), /* @__PURE__ */ React.createElement("div", { className: "hero-stat-divider" }), /* @__PURE__ */ React.createElement("div", { className: "hero-stat" }, /* @__PURE__ */ React.createElement("div", { className: "hero-stat-number" }, "190+"), /* @__PURE__ */ React.createElement("div", { className: "hero-stat-label" }, "YEARS OF TRUST")))), /* @__PURE__ */ React.createElement("section", { className: "brand-marquee-section" }, /* @__PURE__ */ React.createElement("div", { className: "marquee-wrapper" }, /* @__PURE__ */ React.createElement("div", { className: "marquee-content" }, companies.map((comp, idx) => /* @__PURE__ */ React.createElement("div", { key: `comp-1-${idx}`, className: "brand-item" }, /* @__PURE__ */ React.createElement(
+    "img",
+    {
+      src: comp.logo ? `${BACKEND_ROOT}/uploads/logos/${comp.logo}` : "/gs-logo.png",
+      alt: comp.name,
+      onError: (e) => e.target.src = "/gs-logo.png",
+      style: { height: "40px", width: "auto", objectFit: "contain", filter: "grayscale(1)", opacity: 0.6, transition: "all 0.3s" }
+    }
+  ), /* @__PURE__ */ React.createElement("span", null, comp.name))), companies.map((comp, idx) => /* @__PURE__ */ React.createElement("div", { key: `comp-2-${idx}`, className: "brand-item" }, /* @__PURE__ */ React.createElement(
+    "img",
+    {
+      src: comp.logo ? `${BACKEND_ROOT}/uploads/logos/${comp.logo}` : "/gs-logo.png",
+      alt: comp.name,
+      onError: (e) => e.target.src = "/gs-logo.png",
+      style: { height: "40px", width: "auto", objectFit: "contain", filter: "grayscale(1)", opacity: 0.6, transition: "all 0.3s" }
+    }
+  ), /* @__PURE__ */ React.createElement("span", null, comp.name)))))), /* @__PURE__ */ React.createElement("section", { className: "heritage-section", id: "heritage" }, /* @__PURE__ */ React.createElement("div", { className: "container" }, /* @__PURE__ */ React.createElement("div", { className: "heritage-grid" }, /* @__PURE__ */ React.createElement("div", { className: "heritage-content" }, /* @__PURE__ */ React.createElement("span", { className: "section-badge" }, "Our Legacy"), /* @__PURE__ */ React.createElement("h2", { className: "section-title-creative" }, "Established In 1835"), /* @__PURE__ */ React.createElement("p", { className: "section-desc" }, "From 1835 to the present day, George Steuart & Company has stood as a beacon of stability and growth in Sri Lanka. Rooted in a rich heritage, we continue to embrace innovation, pursue excellence, and create lasting value for future generations."), /* @__PURE__ */ React.createElement("div", { className: "heritage-features" }, /* @__PURE__ */ React.createElement("div", { className: "h-feature" }, /* @__PURE__ */ React.createElement("div", { className: "h-icon" }, /* @__PURE__ */ React.createElement(FiGlobe, null)), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h4", null, "Global Presence"), /* @__PURE__ */ React.createElement("p", null, "Global Presence Connecting markets, building partnerships, and extending our legacy of excellence beyond borders."))), /* @__PURE__ */ React.createElement("div", { className: "h-feature" }, /* @__PURE__ */ React.createElement("div", { className: "h-icon" }, /* @__PURE__ */ React.createElement(FiUsers, null)), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h4", null, "Diverse Team"), /* @__PURE__ */ React.createElement("p", null, "Over 1,000 professionals working across multiple sectors."))))), /* @__PURE__ */ React.createElement("div", { className: "heritage-visual" }, /* @__PURE__ */ React.createElement("div", { className: "heritage-card-wrapper" }, /* @__PURE__ */ React.createElement(
+    "img",
+    {
+      src: "/heritage-believe.png",
+      alt: "George Steuart Heritage - Believe",
+      className: "heritage-believe-img"
+    }
+  ), /* @__PURE__ */ React.createElement("div", { className: "heritage-floating-text" }, '"Believe in Excellence"')))))), /* @__PURE__ */ React.createElement("section", { className: "values-section" }, /* @__PURE__ */ React.createElement("div", { className: "container" }, /* @__PURE__ */ React.createElement("div", { className: "values-grid" }, /* @__PURE__ */ React.createElement("div", { className: "value-item" }, /* @__PURE__ */ React.createElement("div", { className: "value-icon" }, "I"), /* @__PURE__ */ React.createElement("h3", null, "Integrity"), /* @__PURE__ */ React.createElement("p", null, "We maintain the highest standards of professional ethics and transparent conduct.")), /* @__PURE__ */ React.createElement("div", { className: "value-item" }, /* @__PURE__ */ React.createElement("div", { className: "value-icon" }, "E"), /* @__PURE__ */ React.createElement("h3", null, "Excellence"), /* @__PURE__ */ React.createElement("p", null, "Delivering world-class quality in every sector we operate in, every single day.")), /* @__PURE__ */ React.createElement("div", { className: "value-item" }, /* @__PURE__ */ React.createElement("div", { className: "value-icon" }, "H"), /* @__PURE__ */ React.createElement("h3", null, "Heritage"), /* @__PURE__ */ React.createElement("p", null, "Continuing a 190+ year journey of mercantile leadership in Sri Lanka."))))), /* @__PURE__ */ React.createElement("section", { className: "cta-section" }, /* @__PURE__ */ React.createElement("div", { className: "container" }, /* @__PURE__ */ React.createElement("div", { className: "cta-card" }, /* @__PURE__ */ React.createElement("div", { className: "cta-content" }, /* @__PURE__ */ React.createElement("h2", null, "Be Part of Sri Lanka's Heritage"), /* @__PURE__ */ React.createElement("p", null, "We are always looking for talented individuals who believe in excellence and integrity."), /* @__PURE__ */ React.createElement(Link, { to: "/vacancies", className: "btn btn-warm btn-lg" }, "Explore Openings"))))), /* @__PURE__ */ React.createElement("footer", { className: "footer-premium" }, /* @__PURE__ */ React.createElement("div", { className: "container" }, /* @__PURE__ */ React.createElement("div", { className: "footer-top-grid" }, /* @__PURE__ */ React.createElement("div", { className: "footer-col brand-col" }, /* @__PURE__ */ React.createElement("img", { src: "/gs-logo.png", alt: "George Steuart & Co", className: "footer-logo-premium" }), /* @__PURE__ */ React.createElement("h3", { className: "footer-brand-name" }, "George Steuart ", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", null, "& Company Ltd")), /* @__PURE__ */ React.createElement("p", { className: "footer-about-text" }, "Established in 1835, George Steuart & Company is Sri Lanka's oldest mercantile firm, fostering excellence for nearly two centuries."), /* @__PURE__ */ React.createElement("div", { className: "footer-socials" }, /* @__PURE__ */ React.createElement("a", { href: "https://www.facebook.com/GeorgeSteuarts", target: "_blank", rel: "noopener noreferrer", className: "social-link", title: "Facebook" }, /* @__PURE__ */ React.createElement(FiFacebook, null)), /* @__PURE__ */ React.createElement("a", { href: "https://www.linkedin.com/company/george-steuart-&-company-limited", target: "_blank", rel: "noopener noreferrer", className: "social-link", title: "LinkedIn" }, /* @__PURE__ */ React.createElement(FiLinkedin, null)))), /* @__PURE__ */ React.createElement("div", { className: "footer-col links-col" }, /* @__PURE__ */ React.createElement("h4", { className: "footer-col-title" }, "Quick Links"), /* @__PURE__ */ React.createElement("ul", { className: "footer-links-list" }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(Link, { to: "/" }, "Home")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(Link, { to: "/vacancies" }, "All Vacancies")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("a", { href: "#heritage" }, "Our Heritage")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement(Link, { to: "/admin/login" }, "Admin Portal")))), /* @__PURE__ */ React.createElement("div", { className: "footer-col contact-col" }, /* @__PURE__ */ React.createElement("h4", { className: "footer-col-title" }, "Get In Touch"), /* @__PURE__ */ React.createElement("div", { className: "footer-contact-info" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement(FiMapPin, { className: "c-icon" }), " No. 439, Galle Road, Colombo 03, Sri Lanka."), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement(FiGlobe, { className: "c-icon" }), " www.georgesteuart.lk"), /* @__PURE__ */ React.createElement("div", { className: "contact-numbers" }, /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("span", null, "T:"), " +94 117 792 400"), /* @__PURE__ */ React.createElement("p", null, /* @__PURE__ */ React.createElement("span", null, "E:"), " info@georgesteuart.lk"))))), /* @__PURE__ */ React.createElement("div", { className: "footer-bottom-bar" }, /* @__PURE__ */ React.createElement("div", { className: "copyright-area" }, "\xA9 ", (/* @__PURE__ */ new Date()).getFullYear(), " George Steuart & Company Ltd. All Rights Reserved."), /* @__PURE__ */ React.createElement("div", { className: "developer-credit" }, "Developed by ", /* @__PURE__ */ React.createElement("span", null, "GS Optimize pvt ltd"))))));
+}
+export default HomePage;

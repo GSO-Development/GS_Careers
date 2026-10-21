@@ -1,0 +1,10 @@
+<?php
+try {
+    $pdo = new PDO('mysql:host=localhost;dbname=gs_jobs', 'root', '');
+    $stmt = $pdo->query('DESCRIBE applications');
+    foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        echo $row['Field'] . " (" . $row['Type'] . ")" . PHP_EOL;
+    }
+} catch (Exception $e) {
+    echo $e->getMessage();
+}

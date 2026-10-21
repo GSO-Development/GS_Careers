@@ -1,0 +1,2018 @@
+/* =========================================================
+   George Steuart Admin Portal - CV Extractions Manager CSS
+   Theme: Ultra Clean, Modern & Attractive Design System
+   Maroon Core Accent (#7A1228) with Crisp Whites & Slate Typography
+   ========================================================= */
+
+.cve-container {
+    padding: 1.5rem 2rem 3rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #0f172a;
+}
+
+/* =========================================================
+   1. Clean Floating Header Bar
+   ========================================================= */
+.cve-page-header {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    transition: all 0.25s ease;
+}
+
+.cve-page-header:hover {
+    box-shadow: 0 8px 25px -4px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+
+.cve-header-title-area {
+    display: flex;
+    flex-direction: column;
+}
+
+.cve-header-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(122, 18, 40, 0.07);
+    color: #7A1228;
+    font-size: 0.73rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    border: 1px solid rgba(122, 18, 40, 0.12);
+    width: fit-content;
+}
+
+.cve-header-tag-icon {
+    font-size: 0.85rem;
+}
+
+.cve-header-title-area h1 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0.35rem 0 0.15rem 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.cve-header-title-area p {
+    color: #64748b;
+    margin: 0;
+    font-size: 0.84rem;
+    font-weight: 500;
+}
+
+/* Header Toggle Card */
+.cve-toggle-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 0.55rem 1rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.cve-toggle-card:hover {
+    border-color: rgba(122, 18, 40, 0.3);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.cve-toggle-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.cve-toggle-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.cve-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.cve-status-pill.active {
+    color: #16a34a;
+}
+
+.cve-status-pill.inactive {
+    color: #e11d48;
+}
+
+.cve-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/* Sleek Toggle Switch */
+.cve-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.cve-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cve-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #cbd5e1;
+    transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 24px;
+}
+
+.cve-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #ffffff;
+    transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+}
+
+input:checked + .cve-slider {
+    background: linear-gradient(135deg, #7A1228, #9b1d38);
+}
+
+input:checked + .cve-slider:before {
+    transform: translateX(20px);
+}
+
+/* =========================================================
+   2. Micro KPI Stat Cards Grid
+   ========================================================= */
+.cve-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.15rem;
+    margin-bottom: 1.25rem;
+}
+
+.cve-stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0.95rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.cve-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.06);
+    border-color: rgba(122, 18, 40, 0.25);
+}
+
+.cve-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.cve-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.cve-stat-icon.total { background: #eff6ff; color: #2563eb; }
+.cve-stat-icon.extracted { background: #f0fdf4; color: #16a34a; }
+.cve-stat-icon.unextracted { background: #fffbeb; color: #d97706; }
+
+.cve-stat-chip {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.cve-stat-chip.total { background: #eff6ff; color: #2563eb; }
+.cve-stat-chip.extracted { background: #f0fdf4; color: #16a34a; }
+.cve-stat-chip.unextracted { background: #fffbeb; color: #d97706; }
+
+.cve-stat-body {
+    margin-bottom: 0.75rem;
+}
+
+.cve-stat-val {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+.cve-stat-val.val-extracted { color: #16a34a; }
+.cve-stat-val.val-unextracted { color: #d97706; }
+
+.cve-stat-lbl {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 3px;
+}
+
+/* Micro Progress Bar Indicator */
+.cve-progress-track {
+    width: 100%;
+    height: 4px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.cve-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+.cve-progress-fill.total { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+.cve-progress-fill.extracted { background: linear-gradient(90deg, #16a34a, #22c55e); }
+.cve-progress-fill.unextracted { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+/* =========================================================
+   3. Modern Segmented Controls (Tabs, Search, Actions)
+   ========================================================= */
+.cve-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.15rem;
+    flex-wrap: wrap;
+}
+
+.cve-tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.cve-tab-btn {
+    padding: 0.48rem 1.05rem;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.83rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.cve-tab-btn:hover {
+    color: #0f172a;
+}
+
+.cve-tab-btn.active {
+    background: linear-gradient(135deg, #7A1228 0%, #941732 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(122, 18, 40, 0.28);
+}
+
+.cve-tab-badge {
+    background: rgba(255, 255, 255, 0.22);
+    color: inherit;
+    padding: 0.1rem 0.5rem;
+    border-radius: 16px;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.cve-tab-btn:not(.active) .cve-tab-badge {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.cve-controls-right {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.cve-search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    padding: 0.5rem 0.95rem;
+    border-radius: 10px;
+    min-width: 280px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+}
+
+.cve-search-box:focus-within {
+    border-color: #7A1228;
+    box-shadow: 0 0 0 3px rgba(122, 18, 40, 0.1);
+}
+
+.cve-search-icon {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.cve-search-box input {
+    background: transparent;
+    border: none;
+    color: #0f172a;
+    font-size: 0.85rem;
+    outline: none;
+    width: 100%;
+}
+
+/* Job Vacancy Filter Dropdown */
+.cve-position-filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 220px;
+    max-width: 320px;
+}
+
+.cve-position-icon {
+    position: absolute;
+    left: 12px;
+    color: #7A1228;
+    font-size: 0.95rem;
+    pointer-events: none;
+    opacity: 0.85;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+
+.cve-position-select {
+    width: 100%;
+    height: 38px;
+    padding: 0 32px 0 36px;
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 13px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.cve-position-select:hover {
+    border-color: #94a3b8;
+}
+
+.cve-position-select:focus {
+    outline: none;
+    border-color: #7A1228;
+    box-shadow: 0 0 0 3px rgba(122, 18, 40, 0.1);
+}
+
+.cve-position-filter.has-selected .cve-position-select {
+    background-color: #fff7f8;
+    border-color: rgba(122, 18, 40, 0.35);
+    color: #7A1228;
+    font-weight: 700;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237A1228'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.cve-position-filter.has-selected .cve-position-icon {
+    color: #7A1228;
+    opacity: 1;
+}
+
+.cve-btn-primary {
+    background: linear-gradient(135deg, #7A1228, #941732);
+    color: #ffffff;
+    font-weight: 700;
+    padding: 0.52rem 1.2rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(122, 18, 40, 0.25);
+    white-space: nowrap;
+}
+
+.cve-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(122, 18, 40, 0.38);
+    background: linear-gradient(135deg, #620d1f, #801228);
+}
+
+/* =========================================================
+   4. Refined Premium Table Card
+   ========================================================= */
+.cve-table-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px -3px rgba(0, 0, 0, 0.03);
+}
+
+.cve-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.cve-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    min-width: 980px;
+}
+
+.cve-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.cve-table td {
+    padding: 0.95rem 1.25rem;
+    color: #1e293b;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.cve-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.cve-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.cve-table tbody tr.selected-row {
+    background: #f8fafc;
+}
+
+/* Custom Checkbox */
+.cve-checkbox {
+    width: 17px;
+    height: 17px;
+    accent-color: #7A1228;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* Candidate Details Cell */
+.cve-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 240px;
+}
+
+.cve-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7A1228, #9b1d38);
+    color: #ffffff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    box-shadow: 0 3px 8px rgba(122, 18, 40, 0.2);
+    flex-shrink: 0;
+}
+
+.cve-user-meta {
+    min-width: 0;
+}
+
+.cve-user-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.cve-user-email {
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.2;
+    word-break: break-all;
+}
+
+.cve-user-phone {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Target Vacancy Cell */
+.cve-vacancy-title {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.cve-company-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Applied Date Cell */
+.cve-date-main {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.86rem;
+    white-space: nowrap;
+}
+
+.cve-date-sub {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+/* Status Pill Badges */
+.cve-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cve-badge.extracted {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.cve-badge.unextracted {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.cve-badge.disabled-low {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* Match Score Pill */
+.cve-match-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.cve-match-pill .cve-match-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cve-match-pill.high .cve-match-dot {
+    background: #16a34a;
+}
+
+.cve-match-pill.medium .cve-match-dot {
+    background: #d97706;
+}
+
+.cve-match-pill.low .cve-match-dot {
+    background: #dc2626;
+}
+
+.cve-match-pill.high {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.cve-match-pill.medium {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.cve-match-pill.low {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.cve-match-tier-text {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* Actions Column */
+.cve-actions {
+    display: flex;
+    gap: 0.45rem;
+}
+
+.cve-btn-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.92rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    flex-shrink: 0;
+}
+
+.cve-btn-icon:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+}
+
+.cve-btn-icon.extract:hover {
+    background: rgba(122, 18, 40, 0.08);
+    color: #7A1228;
+    border-color: rgba(122, 18, 40, 0.35);
+}
+
+/* Pagination Bar */
+.cve-pagination-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1.25rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 0.83rem;
+    font-weight: 500;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.cve-pagination-info strong {
+    color: #0f172a;
+}
+
+.cve-pagination-btns {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.cve-page-btn {
+    padding: 0.38rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+}
+
+.cve-page-btn:hover:not(:disabled) {
+    background: #7A1228;
+    color: #ffffff;
+    border-color: #7A1228;
+}
+
+.cve-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.cve-page-indicator {
+    padding: 0.35rem 0.75rem;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.83rem;
+}
+
+/* Empty & Loading States */
+.cve-loading-state, .cve-empty-state {
+    padding: 3.5rem 2rem;
+    text-align: center;
+    color: #64748b;
+}
+
+.cve-empty-icon {
+    font-size: 2.5rem;
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+    color: #7A1228;
+}
+
+.cve-empty-state h3 {
+    margin: 0 0 0.4rem 0;
+    color: #0f172a;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.cve-empty-state p {
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+/* Modal Window Styles */
+.cve-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+}
+
+.cve-modal {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-top: 5px solid #7A1228;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 1050px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
+}
+
+.cve-modal-header {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+}
+
+.cve-modal-header h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.cve-modal-body {
+    padding: 1.15rem 1.35rem;
+    background: #f8fafc;
+    overflow-y: auto;
+}
+
+.cve-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+/* Candidate Modal Header Card & Avatar */
+.cve-candidate-modal-header-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    margin-bottom: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.cve-candidate-modal-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7A1228, #9b1d38);
+    color: #ffffff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 3px 8px rgba(122, 18, 40, 0.2);
+    flex-shrink: 0;
+}
+
+.cve-field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 1rem;
+}
+
+@media (max-width: 640px) {
+    .cve-field-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cve-detail-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.15rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.cve-field {
+    margin-bottom: 0.35rem;
+}
+
+.cve-field-lbl {
+    font-size: 0.67rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.cve-field-val {
+    font-size: 0.85rem;
+    color: #0f172a;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.cve-text-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.65rem;
+}
+
+.cve-text-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    color: #1e293b;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.82rem;
+    white-space: pre-wrap;
+    max-height: 240px;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+
+.spin-cv {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+    .cve-container {
+        padding: 1.15rem 1.25rem 2rem 1.25rem;
+    }
+
+    .cve-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.85rem;
+    }
+
+    .cve-stat-card {
+        padding: 0.85rem 1rem;
+    }
+
+    .cve-stat-val {
+        font-size: 1.35rem;
+    }
+
+    .cve-search-box {
+        min-width: 220px;
+    }
+}
+
+@media (max-width: 850px) {
+    .cve-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cve-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cve-toggle-card {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .cve-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cve-controls-right {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cve-tabs {
+        width: 100%;
+        justify-content: space-between;
+        overflow-x: auto;
+    }
+
+    .cve-tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .cve-search-box {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .cve-btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .cve-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cve-modal {
+        max-width: 95vw;
+    }
+}
+
+/* =========================================================
+   Steuart AI Recruiter Evaluation Report Styles
+   ========================================================= */
+.admin-recruiter-report {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 6px;
+}
+
+/* Job Requirement Alignment / Mismatch Banners */
+.job-mismatch-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #fff1f2;
+    border: 1.5px solid #fecdd3;
+    border-left: 5px solid #e11d48;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    color: #9f1239;
+}
+
+.job-mismatch-banner .mismatch-icon {
+    color: #e11d48;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.job-mismatch-banner h6 {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #9f1239;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    border: none;
+    padding: 0;
+}
+
+.job-mismatch-banner p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #be123c;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.job-match-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-left: 5px solid #16a34a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    color: #14532d;
+}
+
+.job-match-banner .match-icon {
+    color: #16a34a;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.job-match-banner h6 {
+    margin: 0 0 4px 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #14532d;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    border: none;
+    padding: 0;
+}
+
+.job-match-banner p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #15803d;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.admin-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(200, 169, 81, 0.08);
+    border: 1.5px solid rgba(200, 169, 81, 0.3);
+    color: #b45309;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.recruiter-report-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.report-summary-block,
+.report-insights-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+}
+
+.report-insights-block {
+    border-left: 4px solid #c8a951;
+}
+
+.report-summary-block h6,
+.report-insights-block h6,
+.requirements-validation-panel h6,
+.skills-analysis-matrix-block h6,
+.credentials-validation-panel h6 {
+    margin: 0 0 12px 0;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 6px;
+}
+
+.summary-text {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #475569;
+    line-height: 1.6;
+    font-style: italic;
+}
+
+.insights-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.86rem;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.insights-list li {
+    margin-bottom: 8px;
+}
+
+.requirements-validation-panel,
+.credentials-validation-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.validation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+}
+
+.validation-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.col-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.col-title.green { color: #059669; }
+.col-title.orange { color: #d97706; }
+.col-title.red { color: #dc2626; }
+
+.badge-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.val-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.val-badge.green {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.val-badge.orange {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.val-badge.red {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.no-badge {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.skills-analysis-matrix-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+}
+
+.apb-skills-tabs {
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 16px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.apb-tab-btn {
+    padding: 8px 14px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    margin-bottom: -2px;
+}
+
+.apb-tab-btn:hover {
+    color: #7A1228;
+    border-bottom-color: rgba(122, 18, 40, 0.3);
+}
+
+.apb-tab-btn.active {
+    color: #7A1228;
+    border-bottom-color: #7A1228;
+}
+
+.admin-skills-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.admin-skill-card-detailed {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.admin-skill-card-detailed:hover {
+    border-color: rgba(122, 18, 40, 0.25);
+    box-shadow: 0 4px 12px rgba(122, 18, 40, 0.05);
+}
+
+.admin-mandatory-match {
+    border-color: rgba(200, 169, 81, 0.4) !important;
+    background: linear-gradient(135deg, #ffffff 0%, rgba(200, 169, 81, 0.04) 100%) !important;
+}
+
+.admin-skill-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.admin-skill-name-txt {
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: #0f172a;
+}
+
+.admin-mand-pill {
+    font-size: 0.55rem;
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-skill-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.source-txt {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.admin-skill-context-txt {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #475569;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.level-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.skill-match-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.skill-match-status-badge.matched {
+    background-color: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.skill-match-status-badge.unrelated {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+
+/* =========================================================
+   Match Score Legend & Info Bar Styles
+   ========================================================= */
+.cve-match-bar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 10px 20px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03);
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    transition: all 0.25s ease;
+}
+
+.cve-match-bar:hover {
+    box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e1;
+}
+
+.cve-match-left-group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.cve-target-icon-ring {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(122, 18, 40, 0.25);
+    background: rgba(122, 18, 40, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7A1228;
+    font-size: 1.1rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.cve-match-title {
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.cve-match-divider {
+    width: 1px;
+    height: 20px;
+    background: #e2e8f0;
+    margin: 0 14px;
+    flex-shrink: 0;
+}
+
+.cve-match-badges-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.cve-match-badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 30px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    transition: transform 0.15s ease;
+}
+
+.cve-match-badge-pill:hover {
+    transform: translateY(-1px);
+}
+
+.cve-match-badge-pill.high {
+    background: #eefdf5;
+    border: 1px solid #d1fae5;
+    color: #15803d;
+}
+
+.cve-match-badge-pill.medium {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #b45309;
+}
+
+.cve-match-badge-pill.low {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+}
+
+.cve-dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.cve-dot-indicator.green { background: #10b981; }
+.cve-dot-indicator.amber { background: #d97706; }
+.cve-dot-indicator.red   { background: #ef4444; }
+
+.cve-badge-label {
+    font-weight: 800;
+    margin-right: 2px;
+}
+
+.cve-badge-range {
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+.cve-match-info-group {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #7A1228;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding-right: 4px;
+}
+
+.cve-match-info-link {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: opacity 0.15s ease;
+}
+
+.cve-match-info-link:hover {
+    opacity: 0.8;
+}
+
+.cve-tooltip-card {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 220px;
+    max-width: 85vw;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+    font-size: 0.78rem;
+    color: #475569;
+    line-height: 1.4;
+    white-space: normal;
+    word-wrap: break-word;
+    box-sizing: border-box;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.cve-tooltip-arrow {
+    position: absolute;
+    top: -5px;
+    right: 20px;
+    width: 9px;
+    height: 9px;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+    transform: rotate(45deg);
+}
+
+@media (max-width: 950px) {
+    .cve-match-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+
+    .cve-match-left-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .cve-match-badges-group {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .cve-match-info-group {
+        align-self: flex-end;
+    }
+
+    .cve-tooltip-card {
+        right: 0;
+        width: 220px;
+    }
+}
+
+/* =========================================================
+   Pre-Extraction Match Assessment & Rate Breakdown
+   ========================================================= */
+.cve-match-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+    min-width: 175px;
+}
+
+.cve-match-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+    width: 100%;
+    max-width: 185px;
+}
+
+.cve-micro-rate {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 2.5px 6px;
+    font-size: 0.68rem;
+    color: #475569;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.cve-micro-rate:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+.cve-micro-rate strong {
+    font-weight: 800;
+    color: #0f172a;
+    margin-left: 3px;
+}
+
+.cve-micro-rate-wide {
+    grid-column: span 2;
+}
+
+/* Table Card AI Mismatch Banner Pill */
+.cve-mismatch-banner-pill {
+    width: 100%;
+    max-width: 195px;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-left: 3px solid #e11d48;
+    border-radius: 7px;
+    padding: 5px 8px;
+    margin-top: 4px;
+    white-space: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 1px 3px rgba(225, 29, 72, 0.06);
+}
+
+.cve-mismatch-pill-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    color: #be123c;
+}
+
+.cve-mismatch-pill-body {
+    font-size: 0.69rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #881337;
+    word-break: break-word;
+}
+
+/* =========================================================
+   Modal Dual-Card Assessment Layout (Left & Right Split)
+   ========================================================= */
+.cve-assessment-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: stretch;
+}
+
+@media (max-width: 860px) {
+    .cve-assessment-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cve-assessment-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    min-height: 235px;
+}
+
+.cve-assessment-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cve-card-title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.01em;
+}
+
+.cve-assessment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.95rem;
+    gap: 0.65rem;
+}
+
+.cve-custom-formula-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2.5px 8px;
+    border-radius: 10px;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+
+.cve-overall-score-badge {
+    background: #fff1f2;
+    color: #9f1239;
+    border: 1px solid #fecdd3;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cve-overall-score-badge strong {
+    font-weight: 800;
+    color: #7A1228;
+    font-size: 0.82rem;
+}
+
+/* Roomy 5-Metric Grid (2 columns, with Salary spanning full width) */
+.cve-metric-grid-5 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    flex: 1;
+}
+
+.cve-metric-tile-full {
+    grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+    .cve-metric-grid-5 {
+        grid-template-columns: 1fr;
+    }
+    .cve-metric-tile-full {
+        grid-column: span 1;
+    }
+}
+
+.cve-metric-tile {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.65rem 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.18s ease;
+    cursor: default;
+}
+
+.cve-metric-tile:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.cve-metric-tile-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.cve-metric-weight {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-left: 2px;
+}
+
+.cve-metric-score-tag {
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 7px;
+    letter-spacing: -0.01em;
+    flex-shrink: 0;
+}
+
+.cve-metric-score-tag.score-high {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.cve-metric-score-tag.score-med {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.cve-metric-score-tag.score-low {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Right Card Status Pills */
+.cve-pill-warning {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.cve-pill-success {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Point-form assessment list */
+.cve-assessment-points-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    flex: 1;
+    justify-content: flex-start;
+    overflow-y: visible;
+}
+
+.cve-assessment-points-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.81rem;
+    line-height: 1.46;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.cve-bullet-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.cve-assessment-points-list.matched .cve-bullet-icon {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.cve-assessment-points-list.mismatch .cve-bullet-icon {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.cve-point-content {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.81rem;
+    line-height: 1.46;
+    color: #334155;
+    word-break: break-word;
+}
+
+.cve-point-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.70rem;
+    font-weight: 800;
+    padding: 1.5px 7px;
+    border-radius: 6px;
+    margin-right: 6px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    vertical-align: 1px;
+    line-height: 1.3;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cve-point-tag.tag-matched {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.cve-point-tag.tag-mismatch {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.cve-point-text {
+    color: #334155;
+    font-weight: 500;
+}
+
+
+
+
+
+
+
