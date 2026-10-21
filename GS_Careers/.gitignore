@@ -5,3 +5,9 @@ compiled/
 *.bak
 \#*
 .\#*
+
+# Uploaded files
+backend/uploads/cv/*
+!backend/uploads/cv/.gitkeep
+backend/uploads/queue/*
+!backend/uploads/queue/.gitkeep
