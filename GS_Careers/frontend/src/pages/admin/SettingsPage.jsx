@@ -122,7 +122,7 @@ function SettingsPage({ admin }) {
         ai_provider: 'ollama',
         gemini_api_key: '',
         gemini_api_key_backup: '',
-        gemini_model: 'gemini-2.5-flash',
+        gemini_model: 'gemini-3.5-flash',
         ollama_server: 'http://172.16.7.21:11434',
         ollama_model: 'qwen2.5:3b',
         
@@ -275,7 +275,7 @@ function SettingsPage({ admin }) {
                 ai_provider: data.ai_provider || 'ollama',
                 gemini_api_key: data.gemini_api_key || '',
                 gemini_api_key_backup: data.gemini_api_key_backup || '',
-                gemini_model: data.gemini_model || 'gemini-2.5-flash',
+                gemini_model: data.gemini_model || 'gemini-3.5-flash',
                 ollama_server: data.ollama_server || 'http://172.16.7.21:11434',
                 ollama_model: data.ollama_model || 'qwen2.5:3b',
                 
@@ -2425,10 +2425,10 @@ function SettingsPage({ admin }) {
                                             disabled={!isEditing}
                                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0', background: isEditing ? '#ffffff' : '#f8fafc', fontSize: '0.9rem' }}
                                         >
-                                            <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended - Fast &amp; Accurate)</option>
-                                            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (Fast &amp; light)</option>
-                                            <option value="gemini-2.5-pro">gemini-2.5-pro (High quality reasoning)</option>
-                                            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                                            <option value="gemini-3.5-flash">gemini-3.5-flash (Recommended - Fast &amp; Accurate)</option>
+                                            <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Ultra Fast &amp; Light)</option>
+                                            <option value="gemini-flash-latest">gemini-flash-latest</option>
+                                            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                                         </select>
                                     </div>
 
@@ -2492,13 +2492,13 @@ function SettingsPage({ admin }) {
                                                     <div style={{ background: '#ffffff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
                                                         <span style={{ display: 'block', fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Primary Key</span>
                                                         <span style={{ display: 'block', marginTop: '2px', fontSize: '0.75rem', fontWeight: 800, color: quotaData.status === 'healthy' ? '#16a34a' : '#dc2626' }}>
-                                                            {quotaData.status === 'healthy' ? '🟢 Active' : '🔴 429 Limit'}
+                                                            {quotaData.status === 'healthy' ? '🟢 Active' : (quotaData.status === 'credits_depleted' ? '🔴 402 Depleted' : (quotaData.status === 'invalid_key' ? '🔴 Invalid' : '🔴 429 Limit'))}
                                                         </span>
                                                     </div>
                                                     <div style={{ background: '#ffffff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
                                                         <span style={{ display: 'block', fontSize: '0.62rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Backup Key</span>
                                                         <span style={{ display: 'block', marginTop: '2px', fontSize: '0.75rem', fontWeight: 800, color: settings.gemini_api_key_backup ? (backupQuotaData?.status === 'healthy' ? '#16a34a' : (backupQuotaData?.is_exhausted ? '#dc2626' : '#0284c7')) : '#94a3b8' }}>
-                                                            {settings.gemini_api_key_backup ? (backupQuotaData ? (backupQuotaData.status === 'healthy' ? '🟢 Standby' : '🔴 Limit') : '🟢 Standby') : '⚪ Not Set'}
+                                                            {settings.gemini_api_key_backup ? (backupQuotaData ? (backupQuotaData.status === 'healthy' ? '🟢 Standby' : (backupQuotaData.status === 'credits_depleted' ? '🔴 Depleted' : '🔴 Limit')) : '🟢 Standby') : '⚪ Not Set'}
                                                         </span>
                                                     </div>
                                                     <div style={{ background: '#ffffff', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
@@ -2514,6 +2514,12 @@ function SettingsPage({ admin }) {
                                                         </span>
                                                     </div>
                                                 </div>
+
+                                                {quotaData.message && quotaData.status !== 'healthy' && (
+                                                    <div style={{ marginTop: '4px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', fontSize: '0.76rem', color: '#b91c1c', lineHeight: 1.45, fontWeight: 600 }}>
+                                                        ⚠️ {quotaData.message}
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>

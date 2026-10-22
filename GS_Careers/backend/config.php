@@ -39,6 +39,21 @@ function loadEnv($filePath) {
 }
 loadEnv(__DIR__ . '/.env');
 
+// Helper to keep .env file in sync when settings are updated from UI
+function updateEnvVariable($key, $value) {
+    $envPath = __DIR__ . '/.env';
+    if (!file_exists($envPath)) {
+        return false;
+    }
+    $content = file_get_contents($envPath);
+    if (preg_match("/^{$key}=.*/m", $content)) {
+        $content = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $content);
+    } else {
+        $content = rtrim($content) . "\n{$key}={$value}\n";
+    }
+    return @file_put_contents($envPath, $content) !== false;
+}
+
 // ---- DATABASE ----
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'gs_jobs1');

@@ -46,7 +46,7 @@ function handleParse()
     $aiProvider = $settings['ai_provider'] ?? 'ollama';
     $geminiApiKey = !empty($settings['gemini_api_key']) ? trim($settings['gemini_api_key']) : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
     $geminiApiKeyBackup = !empty($settings['gemini_api_key_backup']) ? trim($settings['gemini_api_key_backup']) : '';
-    $geminiModel = $settings['gemini_model'] ?? 'gemini-2.5-flash';
+    $geminiModel = $settings['gemini_model'] ?? 'gemini-3.5-flash';
     
     // Fall back to config.php constants if not found in database settings
     $defaultOllamaServer = defined('OLLAMA_SERVER') ? OLLAMA_SERVER : 'http://172.16.7.21:11434';
@@ -203,7 +203,7 @@ function handleQuotaStatus()
         ]);
     }
 
-    // Ping Gemini API
+    // Ping Gemini API to verify key validity and list models
     $url = "https://generativelanguage.googleapis.com/v1beta/models?key={$apiKey}";
     $ch = curl_init($url);
     curl_setopt_array($ch, [
@@ -221,9 +221,55 @@ function handleQuotaStatus()
     $isExhausted = false;
     $isWarning = false;
 
+    $resData = !empty($res) ? json_decode($res, true) : null;
+    $apiErrorMsg = $resData['error']['message'] ?? '';
+
     if ($httpCode === 200) {
-        $status = 'healthy';
-        $message = 'Gemini API Key is Active & Healthy.';
+        // Probe generation endpoint with minimal token to accurately verify billing / prepayment credit status
+        $probeModel = in_array($model, ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash']) ? $model : 'gemini-3.5-flash';
+        $probeUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$probeModel}:generateContent?key={$apiKey}";
+        $probePayload = json_encode([
+            'contents' => [['parts' => [['text' => 'ping']]]],
+            'generationConfig' => ['maxOutputTokens' => 1]
+        ]);
+        $chGen = curl_init($probeUrl);
+        curl_setopt_array($chGen, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $probePayload,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json']
+        ]);
+        $genRes = curl_exec($chGen);
+        $genHttp = curl_getinfo($chGen, CURLINFO_HTTP_CODE);
+        curl_close($chGen);
+
+        if ($genHttp === 200) {
+            $status = 'healthy';
+            $message = 'Gemini API Key is Active & Healthy.';
+        } else if ($genHttp === 402) {
+            $status = 'credits_depleted';
+            $message = 'Prepayment Credits Depleted (HTTP 402). Your Google Cloud project billing balance is $0.00. Please top up your prepayment credits in AI Studio (https://ai.studio/projects) or use a Free Tier API Key (without billing).';
+            $isExhausted = true;
+        } else if ($genHttp === 429) {
+            $status = 'quota_exceeded';
+            $message = 'Rate Limit / Quota Exceeded (HTTP 429). Requests are currently blocked by Google.';
+            $isExhausted = true;
+        } else if ($genHttp === 403) {
+            $status = 'quota_exhausted';
+            $message = 'Forbidden / Resource Exhausted (HTTP 403). Check API billing or quota limits.';
+            $isExhausted = true;
+        } else {
+            $genData = !empty($genRes) ? json_decode($genRes, true) : null;
+            $genErrMsg = $genData['error']['message'] ?? '';
+            $status = 'error';
+            $message = "Gemini Generation Test Error (HTTP {$genHttp}): " . ($genErrMsg ?: 'Unable to generate content');
+            $isExhausted = true;
+        }
+    } else if ($httpCode === 402) {
+        $status = 'credits_depleted';
+        $message = 'Prepayment Credits Depleted (HTTP 402). Your Google Cloud project billing balance is $0.00. Please top up your prepayment credits in AI Studio (https://ai.studio/projects) or use a Free Tier API Key (without billing).';
+        $isExhausted = true;
     } else if ($httpCode === 429) {
         $status = 'quota_exceeded';
         $message = 'Rate Limit / Quota Exceeded (HTTP 429). Requests are currently blocked by Google.';
@@ -232,13 +278,15 @@ function handleQuotaStatus()
         $status = 'quota_exhausted';
         $message = 'Forbidden / Resource Exhausted (HTTP 403). Check API billing or quota limits.';
         $isExhausted = true;
-    } else if ($httpCode === 400) {
+    } else if ($httpCode === 401 || $httpCode === 400) {
         $status = 'invalid_key';
-        $message = 'Invalid API Key format or key has been revoked by Google.';
+        $detail = $apiErrorMsg ? " ({$apiErrorMsg})" : '';
+        $message = "Invalid or Unauthorized API Key (HTTP {$httpCode}){$detail}. Please provide a valid Gemini API key from Google AI Studio.";
         $isExhausted = true;
     } else {
         $status = 'error';
-        $message = "API Test Error (HTTP {$httpCode}): " . ($curlError ?: 'Unexpected response');
+        $detail = $apiErrorMsg ?: ($curlError ?: 'Unexpected response');
+        $message = "API Test Error (HTTP {$httpCode}): {$detail}";
     }
 
     // Extraction Counts & API Usage

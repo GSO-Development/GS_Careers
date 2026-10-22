@@ -942,7 +942,7 @@ Return ONLY valid JSON matching this exact schema:
                     ]
                 ];
 
-                $modelsToTry = array_unique([$geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash']);
+                $modelsToTry = array_unique([$geminiModel, 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-2.5-flash']);
                 
                 foreach ($apiKeysToTry as $kInfo) {
                     $currKey = $kInfo['key'];
@@ -1001,7 +1001,7 @@ Return ONLY valid JSON matching this exact schema:
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => json_encode($payload),
                 CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-                CURLOPT_TIMEOUT => 12
+                CURLOPT_TIMEOUT => 30
             ]);
             $res = curl_exec($ch);
             $ollamaHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);

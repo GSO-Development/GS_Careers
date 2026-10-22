@@ -634,6 +634,14 @@ function getSettings()
     $settings['default_smtp_user'] = defined('SMTP_USER') ? SMTP_USER : '';
     $settings['default_smtp_from_name'] = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : '';
 
+    // Auto-sync fallback from .env if database is empty
+    $envGeminiKey = defined('GEMINI_API_KEY') ? GEMINI_API_KEY : (getenv('GEMINI_API_KEY') ?: '');
+    if (!empty($envGeminiKey) && empty($settings['gemini_api_key'])) {
+        $settings['gemini_api_key'] = $envGeminiKey;
+        $db = getDB();
+        $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('gemini_api_key', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$envGeminiKey, $envGeminiKey]);
+    }
+
     // If Sub Admin, strip sensitive credentials (SMTP password & Gemini API keys)
     global $auth;
     if ($auth && ($auth['role'] === 'sub_admin1' || $auth['role'] === 'sub_admin2' || $auth['role'] === 'sub_admin')) {
@@ -726,6 +734,15 @@ function saveSettings()
             // Insert or update setting
             $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = ?");
             $stmt->execute([$key, $value, $value]);
+
+            // Auto-sync relevant configuration keys to backend/.env file
+            if ($key === 'gemini_api_key' && !empty($value)) {
+                updateEnvVariable('GEMINI_API_KEY', $value);
+            } elseif ($key === 'ollama_server' && !empty($value)) {
+                updateEnvVariable('OLLAMA_SERVER', $value);
+            } elseif ($key === 'ollama_model' && !empty($value)) {
+                updateEnvVariable('OLLAMA_MODEL', $value);
+            }
         }
 
         $db->commit();
