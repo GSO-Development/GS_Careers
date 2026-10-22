@@ -131,3 +131,49 @@ export const copyToClipboard = async (text) => {
         return false;
     }
 };
+
+/**
+ * Standardize any contact number to clean International Format with spaces:
+ * Example: +94 77 123 4567
+ */
+export const formatContactNumber = (phone) => {
+    if (!phone) return '';
+    const raw = String(phone).trim();
+    if (!raw || raw.toLowerCase() === 'n/a' || raw.toLowerCase() === 'none') return '';
+
+    const cleaned = raw.replace(/[^\d+]/g, '');
+    let digits = raw.replace(/\D/g, '');
+
+    // Sri Lanka prefix handling (+94, 0094, 94)
+    if (cleaned.startsWith('+94') || digits.startsWith('0094') || (digits.startsWith('94') && digits.length >= 11)) {
+        if (digits.startsWith('0094')) {
+            digits = digits.slice(4);
+        } else if (digits.startsWith('94')) {
+            digits = digits.slice(2);
+        }
+        if (digits.startsWith('0')) {
+            digits = digits.slice(1);
+        }
+    } else if (digits.startsWith('0') && digits.length === 10) {
+        digits = digits.slice(1);
+    }
+
+    if (digits.length === 9) {
+        const area = digits.slice(0, 2);
+        const mid = digits.slice(2, 5);
+        const last = digits.slice(5, 9);
+        return `+94 ${area} ${mid} ${last}`;
+    }
+
+    if (raw.startsWith('+')) {
+        return raw.replace(/\s+/g, ' ').trim();
+    }
+
+    if (digits.length === 10 && digits.startsWith('0')) {
+        const sub = digits.slice(1);
+        return `+94 ${sub.slice(0, 2)} ${sub.slice(2, 5)} ${sub.slice(5, 9)}`;
+    }
+
+    return raw;
+};
+

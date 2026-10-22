@@ -11,3 +11,7 @@ backend/uploads/cv/*
 !backend/uploads/cv/.gitkeep
 backend/uploads/queue/*
 !backend/uploads/queue/.gitkeep
+
+# Build artifacts
+frontend/dist/
+

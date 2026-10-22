@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getApplications, exportApplications, getAllVacancies, getCompanies, updateApplicationStatus, sendInterviewInvitation, getSuggestions, API_BASE, deleteApplication, bulkDeleteApplications, getCompanyLocations, extractCvAdmin, getSettings } from '../../services/api';
-import { OVERALL_EXPERIENCE_OPTIONS, RELEVANT_EXPERIENCE_OPTIONS, QUALIFICATION_OPTIONS, formatDate, formatDateTime } from '../../utils/constants';
+import { OVERALL_EXPERIENCE_OPTIONS, RELEVANT_EXPERIENCE_OPTIONS, QUALIFICATION_OPTIONS, formatDate, formatDateTime, formatContactNumber } from '../../utils/constants';
 
 const BACKEND_ROOT = API_BASE.replace('/api', '');
 import { toast } from 'react-toastify';
@@ -1567,9 +1567,10 @@ function Applicants({ admin }) {
                 const scoreData = calculateMatchScore(app);
                 const scoreVal = (scoreData && typeof scoreData.score === 'number') ? scoreData.score : 0;
 
-                // Contact Number: use ="..." formula format so Excel does not convert to scientific notation (e.g. 7.18E+08)
-                const rawContact = String(app.contact_number || '').trim();
-                const contactCell = rawContact ? `="${rawContact.replace(/"/g, '""')}"` : '""';
+                // Contact Number: standardize to International Format with spaces (+94 77 123 4567)
+                // Use ="..." formula format so Excel renders it as text without scientific notation or loss of leading symbols
+                const formattedContact = formatContactNumber(app.contact_number);
+                const contactCell = formattedContact ? `="${formattedContact.replace(/"/g, '""')}"` : '""';
 
                 // Applied Date: use YYYY-MM-DD format so Excel does not display ########
                 const appliedDate = app.applied_at ? String(app.applied_at).slice(0, 10) : '';
@@ -3360,7 +3361,7 @@ function Applicants({ admin }) {
                                                 </div>
                                                 <div className="info-item-content">
                                                     <span className="info-item-label">Phone</span>
-                                                    <p className="info-item-val">{showDetail.contact_number}</p>
+                                                    <p className="info-item-val">{formatContactNumber(showDetail.contact_number) || showDetail.contact_number || 'N/A'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -3970,7 +3971,7 @@ function Applicants({ admin }) {
                                         <span className="invite-meta-label">Telephone</span>
                                         <span className="invite-phone-badge">
                                             <FiPhone size={13} strokeWidth={2.5} />
-                                            {inviteTarget.contact_number}
+                                            {formatContactNumber(inviteTarget.contact_number) || inviteTarget.contact_number}
                                         </span>
                                     </div>
                                 )}

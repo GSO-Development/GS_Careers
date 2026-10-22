@@ -1827,9 +1827,10 @@ function exportApplications()
 
     $rank = 1;
     foreach ($applications as $app) {
-        $contact = trim((string)($app['contact_number'] ?? ''));
+        // Format contact number to clean International Format with spaces (+94 77 123 4567)
+        $formattedPhone = formatContactNumber($app['contact_number'] ?? '');
         // Excel formula format ="..." prevents numbers like +94 718... from turning into scientific notation (7.18E+08)
-        $formattedContact = !empty($contact) ? '="' . str_replace('"', '""', $contact) . '"' : '';
+        $formattedContact = !empty($formattedPhone) ? '="' . str_replace('"', '""', $formattedPhone) . '"' : '';
         // Date format YYYY-MM-DD prevents Excel cells from rendering ########
         $appliedDate = !empty($app['applied_at']) ? substr($app['applied_at'], 0, 10) : '';
 

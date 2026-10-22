@@ -457,4 +457,52 @@ function getEmailTemplate($key, $default)
     }
 }
 
+/**
+ * Standardize any contact number to clean International Format with spaces:
+ * Example: +94 77 123 4567
+ */
+function formatContactNumber($phone)
+{
+    if (empty($phone)) return '';
+    $raw = trim((string)$phone);
+    if ($raw === '' || strtolower($raw) === 'n/a' || strtolower($raw) === 'none') return '';
+
+    // Remove brackets, dashes, dots, spaces to inspect
+    $cleaned = preg_replace('/[^\d+]/', '', $raw);
+    $digits = preg_replace('/\D/', '', $raw);
+
+    // Sri Lanka prefix handling (+94, 0094, 94)
+    if (strpos($cleaned, '+94') === 0 || strpos($digits, '0094') === 0 || (strpos($digits, '94') === 0 && strlen($digits) >= 11)) {
+        if (strpos($digits, '0094') === 0) {
+            $digits = substr($digits, 4);
+        } elseif (strpos($digits, '94') === 0) {
+            $digits = substr($digits, 2);
+        }
+        if (strpos($digits, '0') === 0) {
+            $digits = substr($digits, 1);
+        }
+    } elseif (strpos($digits, '0') === 0 && strlen($digits) === 10) {
+        $digits = substr($digits, 1);
+    }
+
+    if (strlen($digits) === 9) {
+        $area = substr($digits, 0, 2);
+        $mid = substr($digits, 2, 3);
+        $last = substr($digits, 5, 4);
+        return "+94 {$area} {$mid} {$last}";
+    }
+
+    if (strpos($raw, '+') === 0) {
+        return trim(preg_replace('/\s+/', ' ', $raw));
+    }
+
+    if (strlen($digits) === 10 && strpos($digits, '0') === 0) {
+        $sub = substr($digits, 1);
+        return "+94 " . substr($sub, 0, 2) . " " . substr($sub, 2, 3) . " " . substr($sub, 5, 4);
+    }
+
+    return $raw;
+}
+
+
 
