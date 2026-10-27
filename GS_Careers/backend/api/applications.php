@@ -554,6 +554,14 @@ function handleAiParseCv()
         $vacancy = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    if (!$vacancy && !empty($_POST['vacancy_title'])) {
+        $vacancy = [
+            'title' => sanitize($_POST['vacancy_title']),
+            'required_skills' => sanitize($_POST['vacancy_skills'] ?? ''),
+            'description' => sanitize($_POST['vacancy_description'] ?? '')
+        ];
+    }
+
     $candData = [
         'salary_expectation' => $_POST['salary_expectation'] ?? null,
         'overall_experience' => $_POST['overall_experience'] ?? null,
@@ -562,8 +570,8 @@ function handleAiParseCv()
         'file_name' => $fileName
     ];
 
-    // Call AI model (with multi-provider fallback) to evaluate against the target job
-    $parsedData = PdfExtractor::parseCvDataWithAI($cvText, $vacancy ?: 'Open Position', $candData, $tempPath);
+    // Call fast lightweight Gemini AI model for rapid CV pre-fill
+    $parsedData = PdfExtractor::fastExtractProfileWithAI($cvText, $vacancy ?: 'Open Position', $candData, $tempPath);
 
     // Guarantee score and breakdown even if AI model failed
     if (!isset($parsedData['ai_match_score']) || !is_numeric($parsedData['ai_match_score'])) {
@@ -857,16 +865,245 @@ function sendConfirmationEmail($to, $name, $jobTitle, $companyName, $jobRef)
         return;
 
     $defaultSubject = "Application Received - {job_title} | George Steuart Group";
-    $defaultBody = '<!DOCTYPE html>
-<html>
+    $defaultBody = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Application Received - George Steuart Group</title>
+    <!--[if mso]>
+    <style type="text/css">
+        body, table, td, p, a, span { font-family: Arial, sans-serif !important; }
+    </style>
+    <![endif]-->
+    <style type="text/css">
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+        body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; }
+        a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+
+        @media only screen and (max-width: 620px) {
+            .mobile-wrapper { width: 100% !important; padding: 10px !important; }
+            .mobile-card { width: 100% !important; border-radius: 12px !important; }
+            .mobile-content { padding: 26px 20px !important; }
+            .info-label-cell { width: 100% !important; display: block !important; padding-bottom: 2px !important; }
+            .info-value-cell { width: 100% !important; display: block !important; padding-bottom: 12px !important; }
+        }
+    </style>
 </head>
-<body>
-    <p>Thank you for your interest in joining George Steuart Group. We have successfully received your application for {job_title} ({ref_no}) and it is now being reviewed by our Talent Acquisition team.</p>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: #f1f5f9; table-layout: fixed;">
+        <tr>
+            <td align="center" style="padding: 35px 12px;">
+                <!--[if mso]>
+                <table align="center" border="0" cellspacing="0" cellpadding="0" width="600" role="presentation">
+                <tr>
+                <td align="center" valign="top" width="600">
+                <![endif]-->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mobile-wrapper" style="max-width: 600px; margin: 0 auto;">
+                    <tr>
+                        <td>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" class="mobile-card" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);">
+                                <!-- Prestigious Brand Header -->
+                                <tr>
+                                    <td align="center" style="background-color: #0f172a; padding: 36px 24px 28px; border-bottom: 4px solid #c8a951;">
+                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation">
+                                            <tr>
+                                                <td align="center" style="font-family: \'Times New Roman\', Georgia, serif; font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: 3.5px; text-transform: uppercase;">
+                                                    GEORGE STEUART
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td align="center" style="padding-top: 6px;">
+                                                    <span style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; font-size: 10px; font-weight: 800; color: #c8a951; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(200, 169, 81, 0.12); padding: 3px 12px; border-radius: 20px; border: 1px solid rgba(200, 169, 81, 0.35);">
+                                                        ESTABLISHED 1835 &bull; SRI LANKA
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Status Notification Ribbon -->
+                                <tr>
+                                    <td style="background-color: #ecfdf5; border-bottom: 1px solid #d1fae5; padding: 11px 24px; text-align: center;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
+                                            <tr>
+                                                <td align="center" style="font-size: 12px; font-weight: 700; color: #065f46; letter-spacing: 0.5px; text-transform: uppercase;">
+                                                    &#10003; Application Successfully Logged &bull; Ref: {ref_no}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Main Body Content -->
+                                <tr>
+                                    <td class="mobile-content" style="padding: 36px 36px 32px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; color: #334155; line-height: 1.65;">
+                                        
+                                        <!-- Greeting -->
+                                        <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px;">
+                                            Dear {name},
+                                        </h2>
+
+                                        <p style="margin: 0 0 24px 0; font-size: 15px; color: #475569; line-height: 1.65;">
+                                            Thank you for your interest in joining <strong style="color: #0f172a;">George Steuart Group</strong>. We have successfully received your application for the position of <strong style="color: #0f172a;">{job_title}</strong> and your profile is now under evaluation by our Talent Acquisition team.
+                                        </p>
+
+                                        <!-- Application Summary Card -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #c8a951; border-radius: 10px; margin-bottom: 28px; overflow: hidden;">
+                                            <tr>
+                                                <td style="background-color: #f1f5f9; padding: 10px 20px; border-bottom: 1px solid #e2e8f0;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 1px;">
+                                                                Application Summary
+                                                            </td>
+                                                            <td align="right" style="font-size: 11px; font-weight: 700; color: #059669;">
+                                                                &#9679; Under Review
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 18px 20px;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
+                                                        <tr>
+                                                            <td class="info-label-cell" width="34%" valign="top" style="padding: 7px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                Position Applied
+                                                            </td>
+                                                            <td class="info-value-cell" width="66%" valign="top" style="padding: 7px 0; font-size: 14.5px; font-weight: 700; color: #0f172a;">
+                                                                {job_title}
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="info-label-cell" width="34%" valign="top" style="padding: 7px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                Job Reference No
+                                                            </td>
+                                                            <td class="info-value-cell" width="66%" valign="top" style="padding: 7px 0; font-size: 13.5px; font-weight: 600; color: #0f172a;">
+                                                                <span style="font-family: \'SFMono-Regular\', Consolas, Monaco, monospace; background-color: #ffffff; padding: 3px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; color: #1e293b; display: inline-block;">
+                                                                    {ref_no}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="info-label-cell" width="34%" valign="top" style="padding: 7px 0; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                                Operating Entity
+                                                            </td>
+                                                            <td class="info-value-cell" width="66%" valign="top" style="padding: 7px 0; font-size: 14px; font-weight: 600; color: #334155;">
+                                                                {company}
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Next Steps Roadmap -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="margin-bottom: 28px;">
+                                            <tr>
+                                                <td style="padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                                                    <span style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px;">
+                                                        Next Steps in Our Selection Process
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding-top: 16px;">
+                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
+                                                        <tr>
+                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
+                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #0f172a; color: #c8a951; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center;">
+                                                                    1
+                                                                </div>
+                                                            </td>
+                                                            <td valign="top" style="padding-bottom: 16px;">
+                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Profile Evaluation</div>
+                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Our hiring team evaluates your experience, competencies, and qualifications against the role criteria.</div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
+                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
+                                                                    2
+                                                                </div>
+                                                            </td>
+                                                            <td valign="top" style="padding-bottom: 16px;">
+                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Shortlisting &amp; Direct Contact</div>
+                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Shortlisted candidates will be contacted directly by our team with scheduled interview details and guidance.</div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td width="36" valign="top">
+                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
+                                                                    3
+                                                                </div>
+                                                            </td>
+                                                            <td valign="top">
+                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Talent Pool Preservation</div>
+                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Your profile will also remain actively archived in our talent network for prioritized consideration for future vacancies.</div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Sign-off -->
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
+                                            <tr>
+                                                <td>
+                                                    <p style="margin: 0; font-size: 14px; color: #64748b;">
+                                                        Warm regards,
+                                                    </p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+                                                        Talent Acquisition &amp; People Operations
+                                                    </p>
+                                                    <p style="margin: 2px 0 0 0; font-size: 13px; font-weight: 600; color: #c8a951;">
+                                                        George Steuart Group
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td align="center" style="background-color: #0f172a; padding: 28px 24px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+                                        <span style="font-size: 13px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">GEORGE STEUART GROUP</span><br />
+                                        <span style="font-size: 11px; color: #c8a951; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Sri Lanka\'s Oldest Mercantile Establishment &bull; Estd. 1835</span><br />
+                                        <span style="display: inline-block; margin-top: 8px; color: #94a3b8; font-size: 11.5px;">No. 439, Galle Road, Colombo 03, Sri Lanka</span><br />
+                                        <table border="0" cellpadding="0" cellspacing="0" width="80%" role="presentation" style="margin: 16px auto 14px;">
+                                            <tr>
+                                                <td style="border-top: 1px solid rgba(255, 255, 255, 0.12); height: 1px; line-height: 1px;">&nbsp;</td>
+                                            </tr>
+                                        </table>
+                                        <span style="font-size: 10.5px; color: #64748b; display: inline-block;">
+                                            &copy; {current_year} George Steuart &amp; Company Ltd. All Rights Reserved.<br />
+                                            This is an automated recruitment communication. Please do not reply directly to this email.
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <!--[if mso]>
+                </td>
+                </tr>
+                </table>
+                <![endif]-->
+            </td>
+        </tr>
+    </table>
 </body>
-</html>';
+</html>
+';
 
     $subjectTemplate = getEmailTemplate('email_template_confirmation_subject', $defaultSubject);
     $bodyTemplate = getEmailTemplate('email_template_confirmation_body', $defaultBody);
@@ -2305,7 +2542,20 @@ function handleGetTalentPool()
         $params[] = $auth['company_id'];
     }
 
-    $sql .= " ORDER BY a.applied_at DESC";
+    if (!empty($overallExperience)) {
+        $sql .= " ORDER BY CASE LOWER(TRIM(a.overall_experience))
+                    WHEN '0 years' THEN 1
+                    WHEN '0-1 years' THEN 2
+                    WHEN '1-2 years' THEN 3
+                    WHEN '3-4 years' THEN 4
+                    WHEN '5-7 years' THEN 5
+                    WHEN '8-10 years' THEN 6
+                    WHEN '10+ years' THEN 7
+                    ELSE 99
+                END ASC, a.applied_at DESC";
+    } else {
+        $sql .= " ORDER BY a.applied_at DESC";
+    }
 
     $stmt = $db->prepare($sql);
     $stmt->execute($params);

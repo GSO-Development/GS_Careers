@@ -243,9 +243,29 @@ function TalentPool({ admin }) {
     // Creative: Extract unique tags from all candidates for the filter
     const uniqueTags = [...new Set(candidates.flatMap(c => c.tags ? c.tags.split(',').map(t => t.trim()) : []))].sort();
 
-    const totalPages = Math.ceil(candidates.length / itemsPerPage);
+    const expOrderMap = {
+        '0 years': 1,
+        '0-1 years': 2,
+        '1-2 years': 3,
+        '3-4 years': 4,
+        '5-7 years': 5,
+        '8-10 years': 6,
+        '10+ years': 7
+    };
+
+    const sortedCandidates = [...candidates].sort((a, b) => {
+        if (filters.overall_experience) {
+            const aExp = expOrderMap[a.overall_experience?.toLowerCase()?.trim()] || 99;
+            const bExp = expOrderMap[b.overall_experience?.toLowerCase()?.trim()] || 99;
+            if (aExp !== bExp) return aExp - bExp;
+            return new Date(b.applied_at) - new Date(a.applied_at);
+        }
+        return 0;
+    });
+
+    const totalPages = Math.ceil(sortedCandidates.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedCandidates = candidates.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedCandidates = sortedCandidates.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <div className="manage-vacancies-console">
@@ -521,7 +541,7 @@ function TalentPool({ admin }) {
                                     </div>
                                 </td>
                             </tr>
-                        ) : candidates.length === 0 ? (
+                        ) : sortedCandidates.length === 0 ? (
                             <tr>
                                 <td colSpan="5" style={{ padding: '60px', textAlign: 'center' }}>
                                     <div className="empty-state-p">
@@ -675,7 +695,7 @@ function TalentPool({ admin }) {
                 <PaginationFooter
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    totalItems={candidates.length}
+                    totalItems={sortedCandidates.length}
                     itemsPerPage={itemsPerPage}
                     onPageChange={setCurrentPage}
                     label="candidates"

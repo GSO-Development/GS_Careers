@@ -676,6 +676,196 @@ class PdfExtractor {
     }
 
     /**
+     * Ultra-fast lightweight Gemini AI extraction for CV Upload Pre-fill.
+     * Focuses strictly on Personal Information & Professional Profile without heavy scoring overhead.
+     * Target latency: ~1 - 2 seconds.
+     */
+    public static function fastExtractProfileWithAI($cvText, $vacancyInfo = 'Open Position', $candidateData = [], $pdfFilePath = null) {
+        // Guarantee clean plain CV text: extract from file if input text is empty or garbled
+        if ((empty(trim($cvText)) || strlen(trim($cvText)) < 30 || self::isGarbledText($cvText)) && !empty($pdfFilePath) && file_exists($pdfFilePath)) {
+            $extractedFromPdf = self::extractTextFromFile($pdfFilePath);
+            if (!empty($extractedFromPdf) && strlen(trim($extractedFromPdf)) >= 20 && !self::isGarbledText($extractedFromPdf)) {
+                $cvText = $extractedFromPdf;
+            }
+        }
+
+        $cleanedCvText = self::cleanExtractedCvText($cvText);
+        if (!empty(trim($cleanedCvText))) {
+            $cvText = $cleanedCvText;
+        }
+
+        if (empty(trim($cvText)) && (empty($pdfFilePath) || !file_exists($pdfFilePath))) {
+            return self::fallbackRegexParse($cvText);
+        }
+
+        // Extract target vacancy specifications
+        $vacancyTitle = 'Open Position';
+        $designation = '';
+        $reqSkills = '';
+        $jobDesc = '';
+
+        if (is_array($vacancyInfo)) {
+            $vacancyTitle = $vacancyInfo['title'] ?? ($vacancyInfo['vacancy_title'] ?? 'Open Position');
+            $designation = $vacancyInfo['designation'] ?? '';
+            $reqSkills = $vacancyInfo['required_skills'] ?? ($vacancyInfo['vacancy_required_skills'] ?? '');
+            $jobDesc = substr(strip_tags($vacancyInfo['description'] ?? ($vacancyInfo['vacancy_description'] ?? '')), 0, 400);
+        } else if (is_string($vacancyInfo) && !empty($vacancyInfo)) {
+            $vacancyTitle = $vacancyInfo;
+        }
+
+        // Limit CV text length to 15,000 chars for rapid token processing
+        $shortCvText = substr($cvText, 0, 15000);
+
+        // Fetch API keys from settings
+        $db = getDB();
+        $stmt = $db->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('gemini_api_key', 'gemini_api_key_backup', 'gemini_model')");
+        $stmt->execute();
+        $settings = [];
+        while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $settings[$row[0]] = $row[1];
+        }
+
+        $geminiApiKey = !empty($settings['gemini_api_key']) ? trim($settings['gemini_api_key']) : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
+        $geminiApiKeyBackup = !empty($settings['gemini_api_key_backup']) ? trim($settings['gemini_api_key_backup']) : '';
+
+        $apiKeysToTry = [];
+        if (!empty($geminiApiKey)) $apiKeysToTry[] = ['key' => $geminiApiKey, 'label' => 'Primary'];
+        if (!empty($geminiApiKeyBackup) && $geminiApiKeyBackup !== $geminiApiKey) $apiKeysToTry[] = ['key' => $geminiApiKeyBackup, 'label' => 'Backup'];
+
+        $parsed = null;
+
+        if (!empty($apiKeysToTry)) {
+            $prompt = "You are the Senior HR Recruiter and Technical Assessor for George Steuart Group.
+Extract the candidate's personal details, qualifications, experience, and skills from the CV text for the specific TARGET VACANCY below.
+
+TARGET VACANCY SPECIFICATIONS:
+- Target Job Title: {$vacancyTitle}
+- Designation: {$designation}
+- Required Key Skills: {$reqSkills}
+- Job Overview: {$jobDesc}
+
+CANDIDATE CV TEXT:
+{$shortCvText}
+
+REQUIRED JSON OUTPUT FORMAT (strictly valid JSON with no markdown wrapping, no explanation):
+{
+  \"first_name\": \"Candidate first name\",
+  \"last_name\": \"Candidate surname or last name\",
+  \"email\": \"Candidate personal email address\",
+  \"contact_number\": \"Candidate personal phone number\",
+  \"qualification\": \"Highest educational or professional qualification\",
+  \"overall_experience\": \"Total years of all past jobs combined\",
+  \"relevant_experience\": \"Years of past work experience specifically relevant to {$vacancyTitle}\",
+  \"salary_expectation\": \"Salary expected if mentioned in CV, or null\",
+  \"skills\": [\"Skill 1\", \"Skill 2\", \"Skill 3\"]
+}
+
+STRICT EVALUATION RULES:
+1. RELEVANT EXPERIENCE vs OVERALL EXPERIENCE (CRITICAL):
+   - 'overall_experience': Total career duration across ALL jobs (e.g. if candidate worked 3-4 years in accounting, overall_experience is '3-4 years').
+   - 'relevant_experience': MUST ONLY include past work experience that is DIRECTLY RELATED to the Target Job ({$vacancyTitle}) and its domain/skills ({$reqSkills}).
+   - If the candidate's work history is in an UNRELATED domain (e.g. an Accountant, Cashier, Teacher, HR Executive, or Sales Rep applying for a Technical/Developer role like {$vacancyTitle}, or vice-versa):
+     -> YOU MUST SET 'relevant_experience': '0 years' (or '0-1 years' if they only did a brief internship/project in the target domain).
+   - ONLY count years where the candidate was genuinely employed doing work relevant to {$vacancyTitle}.
+   - Do NOT give relevant experience if their past roles do not match {$vacancyTitle}!
+   - If the candidate is a fresh graduate, student, or has no past experience in {$vacancyTitle}:
+     -> SET 'relevant_experience': '0 years'.
+
+2. Both 'overall_experience' and 'relevant_experience' MUST be exactly one of:
+   ['0 years', '0-1 years', '1-2 years', '3-4 years', '5-7 years', '8-10 years', '10+ years'].
+
+3. 'qualification' MUST be exactly one of:
+   ['PhD', 'Masters Degree', 'Bachelors Degree', 'Diploma', 'Professional Certification', 'A/L', 'O/L'].
+   (Note: Do not confuse job titles or software tools with academic qualifications).
+
+4. 'contact_number' MUST be extracted from the candidate's personal contact details at the top/header. NEVER extract phone numbers of referees or references.
+
+5. 'salary_expectation': Extract if explicitly mentioned in CV, otherwise return null.";
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json',
+                    'temperature' => 0.1
+                ]
+            ];
+
+            // Fast models prioritized by proven low latency response (<2s)
+            $configuredModel = $settings['gemini_model'] ?? 'gemini-3.5-flash-lite';
+            $modelsToTry = array_unique(['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', $configuredModel, 'gemini-3.5-flash']);
+
+            foreach ($apiKeysToTry as $kInfo) {
+                $currKey = $kInfo['key'];
+                foreach ($modelsToTry as $mTry) {
+                    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$mTry}:generateContent?key={$currKey}";
+                    $ch = curl_init($url);
+                    curl_setopt_array($ch, [
+                        CURLOPT_RETURNTRANSFER => true,
+                        CURLOPT_POST => true,
+                        CURLOPT_POSTFIELDS => json_encode($payload),
+                        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                        CURLOPT_TIMEOUT => 8,
+                        CURLOPT_CONNECTTIMEOUT => 4
+                    ]);
+                    $res = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+
+                    if ($res && $httpCode === 200) {
+                        self::recordGeminiApiCall();
+                        $arr = json_decode($res, true);
+                        $txt = $arr['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                        if ($txt) {
+                            $clean = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', trim($txt));
+                            $p = json_decode($clean, true);
+                            if (is_array($p) && (!empty($p['first_name']) || !empty($p['email']) || !empty($p['qualification']))) {
+                                $parsed = $p;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // If Gemini succeeded, normalize output
+        if ($parsed && is_array($parsed)) {
+            // Normalize skills analysis structure for frontend
+            if (!empty($parsed['skills']) && is_array($parsed['skills'])) {
+                $parsed['skills_analysis'] = array_map(function($sk) {
+                    $sName = is_string($sk) ? $sk : ($sk['skill'] ?? '');
+                    return [
+                        'skill' => $sName,
+                        'category' => 'Relevant Skills',
+                        'verified' => true
+                    ];
+                }, $parsed['skills']);
+            } else {
+                $parsed['skills_analysis'] = [];
+            }
+
+            // Fallback contact number strictly from header if missing
+            if (empty($parsed['contact_number'])) {
+                $headerPhone = self::extractPhoneFromCVText($cvText);
+                if (!empty($headerPhone)) {
+                    $parsed['contact_number'] = $headerPhone;
+                }
+            }
+
+            return $parsed;
+        }
+
+        // Fallback to instant local regex parse if AI failed or unavailable
+        return self::fallbackRegexParse($cvText);
+    }
+
+    /**
      * Parse raw CV text into Personal Information & Professional Profile JSON using AI model
      */
     public static function parseCvDataWithAI($cvText, $vacancyInfo = 'Open Position', $candidateData = [], $pdfFilePath = null) {

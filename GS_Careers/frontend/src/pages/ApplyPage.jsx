@@ -647,7 +647,7 @@ function ApplyPage() {
         return { firstName: '', lastName: '' };
     };
 
-    const fastExtractProfileFromText = (text, fileName = '') => {
+    const fastExtractProfileFromText = (text, fileName = '', targetVacancy = null) => {
         if (!text && !fileName) return {};
 
         // 1. Unwrap emails wrapped across lines (e.g. "warunaakalank0103@gmail.\ncom")
@@ -977,11 +977,23 @@ function ApplyPage() {
             return '0 years';
         };
 
-        let overall_experience = '1-2 years';
-        let relevant_experience = '1-2 years';
+        let overall_experience = '0-1 years';
+        let relevant_experience = '0 years';
 
         if (text) {
             const lower = text.toLowerCase();
+
+            // Check if candidate CV text has any genuine domain relevance to the target vacancy
+            let hasDomainRelevance = true;
+            if (targetVacancy) {
+                const vacTitle = (targetVacancy.title || '').toLowerCase();
+                const vacSkills = (targetVacancy.required_skills || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+                const titleWords = vacTitle.split(/\s+/).filter(w => w.length > 3 && !['senior', 'junior', 'lead', 'associate', 'intern', 'trainee', 'manager', 'executive', 'specialist', 'officer', 'staff'].includes(w));
+                
+                const matchesSkills = vacSkills.some(s => checkSkillInCvText(s, text));
+                const matchesTitle = titleWords.some(w => lower.includes(w));
+                hasDomainRelevance = matchesSkills || matchesTitle;
+            }
 
             // 1. Check for explicit years of experience statement (bounded to 1-45 years)
             const explicitMatch = lower.match(/(?:over\s+|more\s+than\s+|having\s+)?\b([1-4]?\d)\s*\+?\s*(?:years?|yrs?)\s+(?:of\s+)?(?:overall|relevant|working|work|professional|industry|practical|hands-on)?\s*experience/i);
@@ -989,7 +1001,7 @@ function ApplyPage() {
                 const numY = parseInt(explicitMatch[1], 10);
                 if (numY >= 1 && numY <= 45) {
                     overall_experience = mapYearsToRange(numY);
-                    relevant_experience = mapYearsToRange(Math.max(1, Math.round(numY * 0.8)));
+                    relevant_experience = hasDomainRelevance ? mapYearsToRange(Math.max(1, Math.round(numY * 0.8))) : '0 years';
                 }
             } else {
                 // 2. Scan work experience section for date ranges
@@ -1010,14 +1022,14 @@ function ApplyPage() {
                         
                         if (diff >= 1) {
                             overall_experience = mapYearsToRange(diff);
-                            relevant_experience = mapYearsToRange(Math.max(1, Math.round(diff * 0.75)));
+                            relevant_experience = hasDomainRelevance ? mapYearsToRange(Math.max(1, Math.round(diff * 0.75))) : '0 years';
                         } else {
                             overall_experience = '0-1 years';
-                            relevant_experience = '0-1 years';
+                            relevant_experience = hasDomainRelevance ? '0-1 years' : '0 years';
                         }
                     } else if (/(?:months?|trainee|intern)/i.test(expSection)) {
                         overall_experience = '0-1 years';
-                        relevant_experience = '0-1 years';
+                        relevant_experience = hasDomainRelevance ? '0-1 years' : '0 years';
                     }
                 } else if (isFresher) {
                     overall_experience = '0 years';
@@ -1093,7 +1105,11 @@ function ApplyPage() {
             // 1. FAST INSTANT LOCAL EXTRACTION (<0.1s):
             // Populates First Name, Last Name, Email, Phone, Draft Qual/Exp IMMEDIATELY into the form inputs!
             // Candidate sees their details right away without ANY blocking screen!
-            const extracted = fastExtractProfileFromText(text, file ? file.name : '');
+            const extracted = fastExtractProfileFromText(text, file ? file.name : '', vacancy);
+
+            const initialQual = normalizeQualificationOption(extracted.qualification);
+            const initialOverallExp = normalizeExperienceOption(extracted.overall_experience);
+            const initialRelExp = normalizeExperienceOption(extracted.relevant_experience);
 
             setForm(prev => ({
                 ...prev,
@@ -1101,9 +1117,9 @@ function ApplyPage() {
                 last_name: extracted.last_name || prev.last_name || '',
                 email: extracted.email || prev.email || '',
                 contact_number: extracted.contact_number || prev.contact_number || '',
-                qualification: '',
-                overall_experience: '',
-                relevant_experience: '',
+                qualification: initialQual || prev.qualification || '',
+                overall_experience: initialOverallExp || prev.overall_experience || '',
+                relevant_experience: initialRelExp || prev.relevant_experience || '',
                 salary_expectation: extracted.salary_expectation || prev.salary_expectation || ''
             }));
 
@@ -1115,22 +1131,32 @@ function ApplyPage() {
                 setUserSkills(matched);
             }
 
-            // 2. Authoritative Gemini AI Extraction in the background (takes ~1-2s):
-            // Refines and locks in Qualifications, Total Experience, Relevant Experience, and Verified Skills!
+            // 2. Authoritative Fast Gemini AI Extraction in the background (~1-2s):
+            // Accurately locks in and verifies Personal Details & Professional Profile!
             try {
                 const aiFormData = new FormData();
                 aiFormData.append('cv_text', text);
                 aiFormData.append('file_name', file ? file.name : '');
-                aiFormData.append('vacancy_id', id);
+                aiFormData.append('vacancy_id', id || '');
+                if (vacancy) {
+                    aiFormData.append('vacancy_title', vacancy.title || '');
+                    aiFormData.append('vacancy_skills', vacancy.required_skills || '');
+                    aiFormData.append('vacancy_description', vacancy.description || '');
+                }
                 if (file) aiFormData.append('cv', file);
 
                 const aiResponse = await aiParseCv(aiFormData);
                 const aiData = aiResponse.data?.data || aiResponse.data;
 
                 if (aiData) {
-                    const normQual = normalizeQualificationOption(aiData.qualification) || normalizeQualificationOption(extracted.qualification);
-                    const normOverallExp = normalizeExperienceOption(aiData.overall_experience) || normalizeExperienceOption(extracted.overall_experience);
-                    const normRelExp = normalizeExperienceOption(aiData.relevant_experience) || normalizeExperienceOption(extracted.relevant_experience);
+                    const normQual = normalizeQualificationOption(aiData.qualification) || initialQual;
+                    const normOverallExp = normalizeExperienceOption(aiData.overall_experience) || initialOverallExp;
+                    
+                    // Authoritative relevant experience directly from Gemini AI:
+                    let normRelExp = initialRelExp;
+                    if (aiData.relevant_experience !== undefined && aiData.relevant_experience !== null && aiData.relevant_experience !== '') {
+                        normRelExp = normalizeExperienceOption(aiData.relevant_experience);
+                    }
 
                     setForm(prev => ({
                         ...prev,
@@ -1164,12 +1190,12 @@ function ApplyPage() {
                     setAiVerified(true);
                 }
             } catch (aiErr) {
-                console.warn("Gemini AI refinement notice (used local fallback):", aiErr);
+                console.warn("Gemini AI fast refinement notice (used local fallback):", aiErr);
                 setForm(prev => ({
                     ...prev,
-                    qualification: prev.qualification || normalizeQualificationOption(extracted.qualification),
-                    overall_experience: prev.overall_experience || normalizeExperienceOption(extracted.overall_experience),
-                    relevant_experience: prev.relevant_experience || normalizeExperienceOption(extracted.relevant_experience)
+                    qualification: prev.qualification || initialQual,
+                    overall_experience: prev.overall_experience || initialOverallExp,
+                    relevant_experience: prev.relevant_experience || initialRelExp
                 }));
             }
 
