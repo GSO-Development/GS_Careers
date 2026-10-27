@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { FiCheck, FiX, FiCalendar, FiMapPin, FiMail, FiAlertCircle } from 'react-icons/fi';
+import { FiCheck, FiX, FiCalendar, FiMapPin, FiAlertCircle } from 'react-icons/fi';
 import { confirmInterview } from '../services/api';
 
 function ConfirmInterview() {
@@ -152,18 +152,6 @@ function ConfirmInterview() {
 
                             <div className="success-v2-message" style={{ marginBottom: '30px' }}>
                                 <p>We understand that you are unable to attend the scheduled interview at this time. Your response has been logged, and the hiring team has been notified.</p>
-                            </div>
-
-                            <div className="rsvp-steps-1">
-                                <div className="next-step-item">
-                                    <div className="next-step-icon" style={{ background: 'rgba(139, 26, 43, 0.05)', color: '#8B1A2B' }}>
-                                        <FiMail />
-                                    </div>
-                                    <div className="next-step-content">
-                                        <h5>Need to Reschedule?</h5>
-                                        <p>If you'd like to reschedule for a different time, please reply directly to the invitation email or reach out to our team.</p>
-                                    </div>
-                                </div>
                             </div>
 
                             <div className="success-v2-actions">

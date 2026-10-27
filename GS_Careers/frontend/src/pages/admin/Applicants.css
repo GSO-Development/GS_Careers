@@ -2598,15 +2598,36 @@
     font-weight: 700;
 }
 
-/* Sort dropdown custom accent */
-.sort-select-highlight {
-    background-color: #fefce8 !important;
-    border-color: #fde047 !important;
-    color: #854d0e !important;
+/* Sort dropdown styling - clean premium presentation */
+.sort-select-control {
+    background-color: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
 }
 
-.sort-select-highlight:hover {
-    border-color: #eab308 !important;
+.sort-select-control:hover {
+    border-color: #7A1228 !important;
+    background-color: #ffffff !important;
+}
+
+.sort-select-control:focus {
+    border-color: #7A1228 !important;
+    box-shadow: 0 0 0 3.5px rgba(122, 18, 40, 0.08) !important;
+}
+
+.filter-field-box.has-value .custom-select-wrapper select.sort-select-control {
+    background-color: #fff7f8 !important;
+    border-color: rgba(122, 18, 40, 0.4) !important;
+    color: #7A1228 !important;
+    font-weight: 700 !important;
+}
+
+.sort-select-control option {
+    background-color: #ffffff;
+    color: #0f172a;
+    padding: 8px 12px;
+    font-weight: 500;
 }
 
 /* 4. Active Filter Chips Ribbon */

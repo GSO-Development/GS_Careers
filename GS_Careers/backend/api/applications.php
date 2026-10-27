@@ -1167,8 +1167,6 @@ function sendInterviewConfirmationReceiptEmail($to, $name, $jobTitle, $companyNa
                                         </td>
                                     </tr>
                                 </table>
-
-                                <p style='margin: 20px 0 0 0;'>If you wish to reschedule or discuss alternative slots, please reply directly to your original interview invitation email or contact the recruitment team.</p>
                                 
                                 <p style='margin: 28px 0 0 0; line-height: 1.5;'>
                                     Best regards,<br />
@@ -1264,6 +1262,49 @@ function getExperienceAtLeast($level)
     return array_slice($tiers, $idx);
 }
 
+/**
+ * Helper to apply experience filter with proper Freshers handling
+ */
+function applyExperienceFilter(&$sql, &$params, $column, $level)
+{
+    if (empty($level)) return;
+    if ($level === '0 years') {
+        $sql .= " AND ($column = '0 years' OR $column = '0-1 years' OR $column IS NULL OR $column = '')";
+    } else {
+        $tiers = getExperienceAtLeast($level);
+        $placeholders = implode(',', array_fill(0, count($tiers), '?'));
+        $sql .= " AND $column IN ($placeholders)";
+        $params = array_merge($params, $tiers);
+    }
+}
+
+/**
+ * Helper to apply smart qualification filter supporting CV extracted degree/diploma text variations
+ */
+function applyQualificationFilter(&$sql, &$params, $qualification)
+{
+    if (empty($qualification)) return;
+    $qLower = strtolower(trim($qualification));
+    if ($qLower === 'bachelors degree' || $qLower === 'bachelor' || $qLower === 'degree') {
+        $sql .= " AND (a.qualification LIKE '%Bachelor%' OR a.qualification LIKE '%BSc%' OR a.qualification LIKE '%B.Sc%' OR a.qualification LIKE '%BEng%' OR a.qualification LIKE '%BIT%' OR a.qualification LIKE '%Degree%' OR a.qualification LIKE '%Undergraduate%' OR a.qualification LIKE '%Graduate%')";
+    } else if ($qLower === 'diploma' || $qLower === 'hnd') {
+        $sql .= " AND (a.qualification LIKE '%Diploma%' OR a.qualification LIKE '%HND%' OR a.qualification LIKE '%NVQ%')";
+    } else if ($qLower === 'masters degree' || $qLower === 'master' || $qLower === 'masters') {
+        $sql .= " AND (a.qualification LIKE '%Master%' OR a.qualification LIKE '%MSc%' OR a.qualification LIKE '%MBA%' OR a.qualification LIKE '%M.Sc%' OR a.qualification LIKE '%Postgraduate%')";
+    } else if ($qLower === 'phd' || $qLower === 'doctorate') {
+        $sql .= " AND (a.qualification LIKE '%PhD%' OR a.qualification LIKE '%Doctorate%' OR a.qualification LIKE '%Ph.D%')";
+    } else if (strpos($qLower, 'cert') !== false || strpos($qLower, 'professional') !== false) {
+        $sql .= " AND (a.qualification LIKE '%Certif%' OR a.qualification LIKE '%CIMA%' OR a.qualification LIKE '%ACCA%' OR a.qualification LIKE '%AAT%' OR a.qualification LIKE '%Chartered%' OR a.qualification LIKE '%CA Sri Lanka%' OR a.qualification LIKE '%Professional%')";
+    } else if ($qLower === 'a/l') {
+        $sql .= " AND (a.qualification LIKE '%A/L%' OR a.qualification LIKE '%Advanced Level%')";
+    } else if ($qLower === 'o/l') {
+        $sql .= " AND (a.qualification LIKE '%O/L%' OR a.qualification LIKE '%Ordinary Level%')";
+    } else {
+        $sql .= " AND a.qualification LIKE ?";
+        $params[] = "%$qualification%";
+    }
+}
+
 function listApplications()
 {
     $auth = verifyToken();
@@ -1302,24 +1343,15 @@ function listApplications()
     }
 
     if (!empty($overallExp)) {
-        // "At least" logic: show all tiers >= selected
-        $overallTiers = getExperienceAtLeast($overallExp);
-        $placeholders = implode(',', array_fill(0, count($overallTiers), '?'));
-        $sql .= " AND a.overall_experience IN ($placeholders)";
-        $params = array_merge($params, $overallTiers);
+        applyExperienceFilter($sql, $params, 'a.overall_experience', $overallExp);
     }
 
     if (!empty($relevantExp)) {
-        // "At least" logic: show all tiers >= selected
-        $relTiers = getExperienceAtLeast($relevantExp);
-        $placeholders = implode(',', array_fill(0, count($relTiers), '?'));
-        $sql .= " AND a.relevant_experience IN ($placeholders)";
-        $params = array_merge($params, $relTiers);
+        applyExperienceFilter($sql, $params, 'a.relevant_experience', $relevantExp);
     }
 
     if (!empty($qualification)) {
-        $sql .= " AND a.qualification = ?";
-        $params[] = $qualification;
+        applyQualificationFilter($sql, $params, $qualification);
     }
 
     if (!empty($status)) {
@@ -1334,8 +1366,12 @@ function listApplications()
     }
 
     if (!empty($search)) {
-        $sql .= " AND (a.first_name LIKE ? OR a.last_name LIKE ? OR a.email LIKE ?)";
+        $sql .= " AND (a.first_name LIKE ? OR a.last_name LIKE ? OR a.email LIKE ? OR a.contact_number LIKE ? OR v.title LIKE ? OR a.tags LIKE ? OR a.qualification LIKE ?)";
         $searchTerm = "%$search%";
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
         $params[] = $searchTerm;
         $params[] = $searchTerm;
         $params[] = $searchTerm;
@@ -1673,22 +1709,15 @@ function exportApplications()
     }
 
     if (!empty($overallExp)) {
-        $overallTiers = getExperienceAtLeast($overallExp);
-        $placeholders = implode(',', array_fill(0, count($overallTiers), '?'));
-        $sql .= " AND a.overall_experience IN ($placeholders)";
-        $params = array_merge($params, $overallTiers);
+        applyExperienceFilter($sql, $params, 'a.overall_experience', $overallExp);
     }
 
     if (!empty($relevantExp)) {
-        $relTiers = getExperienceAtLeast($relevantExp);
-        $placeholders = implode(',', array_fill(0, count($relTiers), '?'));
-        $sql .= " AND a.relevant_experience IN ($placeholders)";
-        $params = array_merge($params, $relTiers);
+        applyExperienceFilter($sql, $params, 'a.relevant_experience', $relevantExp);
     }
 
     if (!empty($qualification)) {
-        $sql .= " AND a.qualification = ?";
-        $params[] = $qualification;
+        applyQualificationFilter($sql, $params, $qualification);
     }
 
     if (!empty($status)) {
@@ -2185,11 +2214,11 @@ function handleGetTalentPool()
                             c.name as last_applied_company
             FROM applications a
             JOIN (
-                SELECT email, MAX(applied_at) as max_date
+                SELECT email, MAX(id) as max_id
                 FROM applications
                 WHERE future_consent = 1
                 GROUP BY email
-            ) latest ON a.email = latest.email AND a.applied_at = latest.max_date
+            ) latest ON a.id = latest.max_id
             JOIN vacancies v ON a.vacancy_id = v.id
             JOIN companies c ON v.company_id = c.id
             WHERE a.future_consent = 1
@@ -2200,11 +2229,11 @@ function handleGetTalentPool()
                         SUM(CASE WHEN a.is_blocked = 1 THEN 1 ELSE 0 END) as blocked_count
                  FROM applications a
                  JOIN (
-                     SELECT email, MAX(applied_at) as max_date
+                     SELECT email, MAX(id) as max_id
                      FROM applications
                      WHERE future_consent = 1
                      GROUP BY email
-                 ) latest ON a.email = latest.email AND a.applied_at = latest.max_date
+                 ) latest ON a.id = latest.max_id
                  JOIN vacancies v ON a.vacancy_id = v.id
                  WHERE a.future_consent = 1
                    AND a.applied_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
@@ -2250,16 +2279,12 @@ function handleGetTalentPool()
 
     $overallExperience = sanitize($_GET['overall_experience'] ?? '');
     if (!empty($overallExperience)) {
-        $expTiers = getExperienceAtLeast($overallExperience);
-        $placeholders = implode(',', array_fill(0, count($expTiers), '?'));
-        $sql .= " AND a.overall_experience IN ($placeholders)";
-        $params = array_merge($params, $expTiers);
+        applyExperienceFilter($sql, $params, 'a.overall_experience', $overallExperience);
     }
 
     $qualification = sanitize($_GET['qualification'] ?? '');
     if (!empty($qualification)) {
-        $sql .= " AND a.qualification = ?";
-        $params[] = $qualification;
+        applyQualificationFilter($sql, $params, $qualification);
     }
 
     $tagFilter = sanitize($_GET['tag'] ?? '');

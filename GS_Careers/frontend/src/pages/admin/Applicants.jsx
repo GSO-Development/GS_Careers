@@ -1357,7 +1357,7 @@ function Applicants({ admin }) {
         search: '',
         interview_date: '',
         salary_match: '',
-        sortBy: 'highExperience' // newest, oldest, highExperience, lowExperience
+        sortBy: searchParams.get('vacancy_id') ? 'matchScore' : 'newest'
     });
 
     const [showJobDetails, setShowJobDetails] = useState(false);
@@ -1405,6 +1405,57 @@ function Applicants({ admin }) {
     useEffect(() => {
         loadMeta();
     }, []);
+
+    const visibleVacancies = filters.company_id
+        ? vacancies.filter(v => String(v.company_id) === String(filters.company_id))
+        : vacancies;
+
+    const handleCompanyChange = (newCompanyId) => {
+        setFilters(prev => {
+            const next = { ...prev, company_id: newCompanyId };
+            if (prev.vacancy_id && newCompanyId) {
+                const vac = vacancies.find(v => String(v.id) === String(prev.vacancy_id));
+                if (vac && String(vac.company_id) !== String(newCompanyId)) {
+                    next.vacancy_id = '';
+                    next.sortBy = 'newest';
+                }
+            }
+            return next;
+        });
+    };
+
+    const handleVacancyChange = (newVacId) => {
+        setFilters(prev => {
+            const next = {
+                ...prev,
+                vacancy_id: newVacId,
+                sortBy: newVacId ? 'matchScore' : 'newest'
+            };
+            if (newVacId) {
+                const vac = vacancies.find(v => String(v.id) === String(newVacId));
+                if (vac && vac.company_id) {
+                    next.company_id = String(vac.company_id);
+                }
+            }
+            return next;
+        });
+    };
+
+    // Reset pagination to page 1 whenever any filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [
+        filters.vacancy_id,
+        filters.company_id,
+        filters.overall_experience,
+        filters.relevant_experience,
+        filters.qualification,
+        filters.status,
+        filters.interview_date,
+        filters.salary_match,
+        filters.sortBy,
+        filters.search
+    ]);
 
     useEffect(() => {
         loadApplications();
@@ -1461,9 +1512,15 @@ function Applicants({ admin }) {
         try {
             setLoading(true);
             const params = {};
-            Object.entries(filters).forEach(([k, v]) => {
-                if (v) params[k] = v;
-            });
+            // Send only database query parameters to backend
+            if (filters.vacancy_id) params.vacancy_id = filters.vacancy_id;
+            if (filters.company_id) params.company_id = filters.company_id;
+            if (filters.overall_experience) params.overall_experience = filters.overall_experience;
+            if (filters.relevant_experience) params.relevant_experience = filters.relevant_experience;
+            if (filters.qualification) params.qualification = filters.qualification;
+            if (filters.status) params.status = filters.status;
+            if (filters.interview_date) params.interview_date = filters.interview_date;
+
             const res = await getApplications(params);
             setApplications(res.data.data || []);
         } catch (err) {
@@ -1637,9 +1694,10 @@ function Applicants({ admin }) {
             search: '',
             interview_date: '',
             salary_match: '',
-            sortBy: 'highExperience'
+            sortBy: 'newest'
         });
         setSelectedIds([]);
+        setCurrentPage(1);
     };
 
     const hasActiveFilters = Boolean(
@@ -1647,11 +1705,12 @@ function Applicants({ admin }) {
         filters.vacancy_id ||
         filters.company_id ||
         filters.overall_experience ||
+        filters.relevant_experience ||
         filters.qualification ||
         filters.status ||
         filters.interview_date ||
         filters.salary_match ||
-        (filters.sortBy && filters.sortBy !== 'highExperience')
+        (filters.sortBy && filters.sortBy !== 'newest')
     );
 
     const handleSelectAll = (e) => {
@@ -1793,27 +1852,141 @@ function Applicants({ admin }) {
 
     // (calculateMatchScore is declared above)
 
+    // Smart qualification matcher for client-side filtering consistency
+    const matchQualification = (candQual, filterQual) => {
+        if (!filterQual) return true;
+        if (!candQual) return false;
+        const qLower = String(candQual).toLowerCase();
+        const fLower = String(filterQual).toLowerCase();
+
+        if (fLower === 'bachelors degree' || fLower === 'bachelor' || fLower === 'degree') {
+            return /bachelor|bsc|b\.sc|beng|bit|degree|undergraduate/i.test(qLower);
+        }
+        if (fLower === 'diploma' || fLower === 'hnd') {
+            return /diploma|hnd|nvq/i.test(qLower);
+        }
+        if (fLower === 'masters degree' || fLower === 'master' || fLower === 'masters') {
+            return /master|msc|mba|m\.sc|postgraduate/i.test(qLower);
+        }
+        if (fLower === 'phd' || fLower === 'doctorate') {
+            return /phd|doctorate|ph\.d/i.test(qLower);
+        }
+        if (fLower.includes('cert') || fLower.includes('professional')) {
+            return /certif|cima|acca|aat|chartered|ca sri lanka|professional/i.test(qLower);
+        }
+        if (fLower === 'a/l') {
+            return /a\/l|advanced level/i.test(qLower);
+        }
+        if (fLower === 'o/l') {
+            return /o\/l|ordinary level/i.test(qLower);
+        }
+        return qLower.includes(fLower);
+    };
+
     const filteredApps = applications
         .filter(app => {
+            // 1. Omnipresent Search Filter (name, email, phone, role, company, qual, tags, skills)
             if (filters.search) {
-                const q = filters.search.toLowerCase();
-                const matchSearch = (app.first_name + ' ' + app.last_name).toLowerCase().includes(q) ||
-                    app.email.toLowerCase().includes(q) ||
-                    app.contact_number.includes(q);
+                const q = filters.search.trim().toLowerCase();
+                const fullName = `${app.first_name || ''} ${app.last_name || ''}`.toLowerCase();
+                const email = String(app.email || '').toLowerCase();
+                const contact = String(app.contact_number || '').toLowerCase();
+                const vacancyTitle = String(app.vacancy_title || '').toLowerCase();
+                const companyName = String(app.company_name || '').toLowerCase();
+                const qualification = String(app.qualification || '').toLowerCase();
+                const tags = String(app.tags || '').toLowerCase();
+                const designation = String(app.designation || '').toLowerCase();
+                const skillsMeta = typeof app.skills_metadata === 'string' ? app.skills_metadata.toLowerCase() : '';
+                const cvSnippet = String(app.cv_text || '').slice(0, 1000).toLowerCase();
+
+                const matchSearch = fullName.includes(q) ||
+                    email.includes(q) ||
+                    contact.includes(q) ||
+                    vacancyTitle.includes(q) ||
+                    companyName.includes(q) ||
+                    qualification.includes(q) ||
+                    tags.includes(q) ||
+                    designation.includes(q) ||
+                    skillsMeta.includes(q) ||
+                    cvSnippet.includes(q);
+
                 if (!matchSearch) return false;
             }
 
+            // 2. Position Filter
+            if (filters.vacancy_id && String(app.vacancy_id) !== String(filters.vacancy_id)) {
+                return false;
+            }
+
+            // 3. Establishment / Company Filter
+            if (filters.company_id && String(app.company_id) !== String(filters.company_id)) {
+                return false;
+            }
+
+            // 4. Academic Qualification Matcher
+            if (filters.qualification && !matchQualification(app.qualification, filters.qualification)) {
+                return false;
+            }
+
+            // 5. Overall Experience Filter
+            if (filters.overall_experience) {
+                if (filters.overall_experience === '0 years') {
+                    if (app.overall_experience && app.overall_experience !== '0 years' && app.overall_experience !== '0-1 years') {
+                        return false;
+                    }
+                } else {
+                    const tiers = getExperienceAtLeast(filters.overall_experience);
+                    if (app.overall_experience && !tiers.includes(app.overall_experience)) {
+                        return false;
+                    }
+                }
+            }
+
+            // 6. Relevant Experience Filter
+            if (filters.relevant_experience) {
+                if (filters.relevant_experience === '0 years') {
+                    if (app.relevant_experience && app.relevant_experience !== '0 years' && app.relevant_experience !== '0-1 years') {
+                        return false;
+                    }
+                } else {
+                    const tiers = getExperienceAtLeast(filters.relevant_experience);
+                    if (app.relevant_experience && !tiers.includes(app.relevant_experience)) {
+                        return false;
+                    }
+                }
+            }
+
+            // 7. Status Filter
+            if (filters.status && app.status !== filters.status) {
+                return false;
+            }
+
+            // 8. Interview Date Filter
+            if (filters.interview_date && app.interview_date !== filters.interview_date) {
+                return false;
+            }
+
+            // 9. Salary Match Filter
             if (filters.salary_match) {
                 const appVac = vacancies.find(v => String(v.id) === String(app.vacancy_id)) || selVac || {};
-                const minB = appVac.min_salary || selVac.min_salary;
-                const maxB = appVac.max_salary || selVac.max_salary;
-                const matchResult = calculateSalaryMatchScore(app.salary_expectation, minB, maxB);
+                const minB = appVac.min_salary || app.min_salary || selVac.min_salary;
+                const maxB = appVac.max_salary || app.max_salary || selVac.max_salary;
+                const candSalNum = parseNumericSalary(app.salary_expectation);
 
-                if (filters.salary_match === 'within' && matchResult.status !== 'within_range') return false;
-                if (filters.salary_match === 'above' && matchResult.status !== 'above_range') return false;
-                if (filters.salary_match === 'below' && matchResult.status !== 'below_range') return false;
-                if (filters.salary_match === 'specified' && parseNumericSalary(app.salary_expectation) === null) return false;
-                if (filters.salary_match === 'unspecified' && parseNumericSalary(app.salary_expectation) !== null) return false;
+                if (filters.salary_match === 'specified') {
+                    if (candSalNum === null) return false;
+                } else if (filters.salary_match === 'unspecified') {
+                    if (candSalNum !== null) return false;
+                } else {
+                    const matchResult = calculateSalaryMatchScore(app.salary_expectation, minB, maxB);
+                    if (filters.salary_match === 'within') {
+                        if (matchResult.status !== 'within_range') return false;
+                    } else if (filters.salary_match === 'above') {
+                        if (matchResult.status !== 'above_range') return false;
+                    } else if (filters.salary_match === 'below') {
+                        if (matchResult.status !== 'below_range') return false;
+                    }
+                }
             }
 
             return true;
@@ -1823,8 +1996,8 @@ function Applicants({ admin }) {
             if (filters.sortBy === 'oldest') return new Date(a.applied_at) - new Date(b.applied_at);
 
             if (filters.sortBy === 'matchScore') {
-                const aScore = calculateMatchScore(a).score;
-                const bScore = calculateMatchScore(b).score;
+                const aScore = (calculateMatchScore(a)?.score ?? a.match_score ?? a.score ?? 0);
+                const bScore = (calculateMatchScore(b)?.score ?? b.match_score ?? b.score ?? 0);
                 if (bScore !== aScore) {
                     return bScore - aScore;
                 }
@@ -1843,14 +2016,73 @@ function Applicants({ admin }) {
                 return new Date(b.applied_at) - new Date(a.applied_at);
             }
 
-            if (filters.sortBy === 'highExperience' || filters.sortBy === 'lowExperience') {
+            if (filters.sortBy === 'lowestScore') {
+                const aScore = (calculateMatchScore(a)?.score ?? a.match_score ?? a.score ?? 0);
+                const bScore = (calculateMatchScore(b)?.score ?? b.match_score ?? b.score ?? 0);
+                if (aScore !== bScore) {
+                    return aScore - bScore;
+                }
+                return new Date(b.applied_at) - new Date(a.applied_at);
+            }
+
+            if (filters.sortBy === 'highExperience') {
                 const expMap = {
                     '10+ years': 7, '8-10 years': 6, '5-7 years': 5,
                     '3-4 years': 4, '1-2 years': 3, '0-1 years': 2, '0 years': 1
                 };
-                const aVal = expMap[a.overall_experience] || 0;
-                const bVal = expMap[b.overall_experience] || 0;
-                return filters.sortBy === 'highExperience' ? bVal - aVal : aVal - bVal;
+                const aOverall = expMap[a.overall_experience] || 0;
+                const bOverall = expMap[b.overall_experience] || 0;
+                if (bOverall !== aOverall) return bOverall - aOverall;
+
+                const aRel = expMap[a.relevant_experience] || 0;
+                const bRel = expMap[b.relevant_experience] || 0;
+                if (bRel !== aRel) return bRel - aRel;
+
+                const aScore = (calculateMatchScore(a)?.score ?? a.match_score ?? a.score ?? 0);
+                const bScore = (calculateMatchScore(b)?.score ?? b.match_score ?? b.score ?? 0);
+                if (bScore !== aScore) return bScore - aScore;
+
+                return new Date(b.applied_at) - new Date(a.applied_at);
+            }
+
+            if (filters.sortBy === 'lowExperience') {
+                const expMap = {
+                    '10+ years': 7, '8-10 years': 6, '5-7 years': 5,
+                    '3-4 years': 4, '1-2 years': 3, '0-1 years': 2, '0 years': 1
+                };
+                const aOverall = expMap[a.overall_experience] || 0;
+                const bOverall = expMap[b.overall_experience] || 0;
+                if (aOverall !== bOverall) return aOverall - bOverall;
+
+                const aRel = expMap[a.relevant_experience] || 0;
+                const bRel = expMap[b.relevant_experience] || 0;
+                if (aRel !== bRel) return aRel - bRel;
+
+                return new Date(b.applied_at) - new Date(a.applied_at);
+            }
+
+            if (filters.sortBy === 'salaryAsc') {
+                const aSal = parseNumericSalary(a.salary_expectation);
+                const bSal = parseNumericSalary(b.salary_expectation);
+                const aVal = aSal !== null ? aSal : Infinity;
+                const bVal = bSal !== null ? bSal : Infinity;
+                if (aVal !== bVal) return aVal - bVal;
+                return new Date(b.applied_at) - new Date(a.applied_at);
+            }
+
+            if (filters.sortBy === 'salaryDesc') {
+                const aSal = parseNumericSalary(a.salary_expectation);
+                const bSal = parseNumericSalary(b.salary_expectation);
+                const aVal = aSal !== null ? aSal : -1;
+                const bVal = bSal !== null ? bSal : -1;
+                if (bVal !== aVal) return bVal - aVal;
+                return new Date(b.applied_at) - new Date(a.applied_at);
+            }
+
+            if (filters.sortBy === 'nameAsc') {
+                const aName = `${a.first_name || ''} ${a.last_name || ''}`.trim().toLowerCase();
+                const bName = `${b.first_name || ''} ${b.last_name || ''}`.trim().toLowerCase();
+                return aName.localeCompare(bName);
             }
 
             return new Date(b.applied_at) - new Date(a.applied_at);
@@ -1867,10 +2099,12 @@ function Applicants({ admin }) {
         filters.vacancy_id,
         filters.company_id,
         filters.overall_experience,
+        filters.relevant_experience,
         filters.qualification,
         filters.salary_match,
         filters.status,
-        filters.interview_date
+        filters.interview_date,
+        (filters.sortBy && filters.sortBy !== 'newest' ? filters.sortBy : '')
     ].filter(Boolean).length;
 
     const activeChips = [];
@@ -1879,17 +2113,20 @@ function Applicants({ admin }) {
     }
     if (filters.vacancy_id) {
         const vacName = vacancies.find(v => String(v.id) === String(filters.vacancy_id))?.title || 'Position';
-        activeChips.push({ key: 'vacancy_id', label: `Role: ${vacName}`, clear: () => setFilters(prev => ({ ...prev, vacancy_id: '', sortBy: 'highExperience' })) });
+        activeChips.push({ key: 'vacancy_id', label: `Role: ${vacName}`, clear: () => handleVacancyChange('') });
     }
     if (filters.company_id) {
-        const compName = companies.find(c => String(c.id) === String(filters.company_id))?.name || 'Entity';
-        activeChips.push({ key: 'company_id', label: `Entity: ${compName}`, clear: () => setFilters(prev => ({ ...prev, company_id: '' })) });
+        const compName = companies.find(c => String(c.id) === String(filters.company_id))?.name || 'Establishment';
+        activeChips.push({ key: 'company_id', label: `Entity: ${compName}`, clear: () => handleCompanyChange('') });
     }
     if (filters.overall_experience) {
-        activeChips.push({ key: 'overall_experience', label: `Exp: ${filters.overall_experience}`, clear: () => setFilters(prev => ({ ...prev, overall_experience: '' })) });
+        activeChips.push({ key: 'overall_experience', label: `Min Exp: ${filters.overall_experience}`, clear: () => setFilters(prev => ({ ...prev, overall_experience: '' })) });
+    }
+    if (filters.relevant_experience) {
+        activeChips.push({ key: 'relevant_experience', label: `Rel Exp: ${filters.relevant_experience}`, clear: () => setFilters(prev => ({ ...prev, relevant_experience: '' })) });
     }
     if (filters.qualification) {
-        activeChips.push({ key: 'qualification', label: `Qual: ${filters.qualification}`, clear: () => setFilters(prev => ({ ...prev, qualification: '' })) });
+        activeChips.push({ key: 'qualification', label: `Academic Status: ${filters.qualification}`, clear: () => setFilters(prev => ({ ...prev, qualification: '' })) });
     }
     if (filters.salary_match) {
         const salaryLabels = {
@@ -1905,7 +2142,19 @@ function Applicants({ admin }) {
         activeChips.push({ key: 'status', label: `Status: ${filters.status.replace('_', ' ')}`, clear: () => setFilters(prev => ({ ...prev, status: '', interview_date: '' })) });
     }
     if (filters.interview_date) {
-        activeChips.push({ key: 'interview_date', label: `Date: ${filters.interview_date}`, clear: () => setFilters(prev => ({ ...prev, interview_date: '' })) });
+        activeChips.push({ key: 'interview_date', label: `Interview: ${filters.interview_date}`, clear: () => setFilters(prev => ({ ...prev, interview_date: '' })) });
+    }
+    if (filters.sortBy && filters.sortBy !== 'newest') {
+        const sortLabels = {
+            matchScore: 'Highest Match Score',
+            lowestScore: 'Lowest Match Score',
+            oldest: 'Oldest First'
+        };
+        activeChips.push({
+            key: 'sortBy',
+            label: `Sort: ${sortLabels[filters.sortBy] || filters.sortBy}`,
+            clear: () => setFilters(prev => ({ ...prev, sortBy: 'newest' }))
+        });
     }
 
     return (
@@ -1927,7 +2176,7 @@ function Applicants({ admin }) {
 
             {/* MODERN ULTRA-PREMIUM FILTER & SEARCH SUITE WITH COLLAPSIBLE PANEL */}
             <div className="applicant-filter-card">
-                {/* Main Top Control Row: Search + Filter Toggle Button + Actions */}
+                {/* Main Top Control Row: Search + Position Dropdown + Filter Toggle Button + Actions */}
                 <div className="filter-top-bar">
                     {/* Search Bar Input */}
                     <div className="filter-search-wrapper">
@@ -1963,19 +2212,12 @@ function Applicants({ admin }) {
                                 name="top_vacancy_id"
                                 aria-label="Filter by position"
                                 value={filters.vacancy_id}
-                                onChange={(e) => {
-                                    const newVacId = e.target.value;
-                                    setFilters(prev => ({
-                                        ...prev,
-                                        vacancy_id: newVacId,
-                                        sortBy: newVacId ? 'matchScore' : 'highExperience'
-                                    }));
-                                }}
+                                onChange={(e) => handleVacancyChange(e.target.value)}
                             >
-                                <option value="">All Positions ({vacancies.length})</option>
-                                {vacancies.map(v => (
+                                <option value="">All Positions ({visibleVacancies.length})</option>
+                                {visibleVacancies.map(v => (
                                     <option key={v.id} value={v.id}>
-                                        {v.title} {v.company_name ? `(${v.company_name})` : ''}
+                                        {v.title} {!filters.company_id && v.company_name ? `(${v.company_name})` : ''}
                                     </option>
                                 ))}
                             </select>
@@ -2078,30 +2320,7 @@ function Applicants({ admin }) {
                         </div>
 
                         <div className="filter-dropdowns-grid">
-                            <div className={`filter-field-box ${filters.vacancy_id ? 'has-value' : ''}`}>
-                                <label htmlFor="vacancy_filter">
-                                    <FiBriefcase className="field-icon" /> Position
-                                </label>
-                                <div className="custom-select-wrapper">
-                                    <select
-                                        id="vacancy_filter"
-                                        name="vacancy_id"
-                                        value={filters.vacancy_id}
-                                        onChange={(e) => {
-                                            const newVacId = e.target.value;
-                                            setFilters(prev => ({
-                                                ...prev,
-                                                vacancy_id: newVacId,
-                                                sortBy: newVacId ? 'matchScore' : 'highExperience'
-                                            }));
-                                        }}
-                                    >
-                                        <option value="">All Active Roles</option>
-                                        {vacancies.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
+                            {/* 1. Establishment / Entity */}
                             {(admin.role === 'super_admin' || admin.role === 'admin') && (
                                 <div className={`filter-field-box ${filters.company_id ? 'has-value' : ''}`}>
                                     <label htmlFor="company_filter">
@@ -2112,15 +2331,38 @@ function Applicants({ admin }) {
                                             id="company_filter"
                                             name="company_id"
                                             value={filters.company_id}
-                                            onChange={(e) => setFilters({ ...filters, company_id: e.target.value })}
+                                            onChange={(e) => handleCompanyChange(e.target.value)}
                                         >
-                                            <option value="">All Entities</option>
+                                            <option value="">All GS Entities</option>
                                             {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
                             )}
 
+                            {/* 2. Position / Role */}
+                            <div className={`filter-field-box ${filters.vacancy_id ? 'has-value' : ''}`}>
+                                <label htmlFor="vacancy_filter">
+                                    <FiBriefcase className="field-icon" /> Position
+                                </label>
+                                <div className="custom-select-wrapper">
+                                    <select
+                                        id="vacancy_filter"
+                                        name="vacancy_id"
+                                        value={filters.vacancy_id}
+                                        onChange={(e) => handleVacancyChange(e.target.value)}
+                                    >
+                                        <option value="">All Roles ({visibleVacancies.length})</option>
+                                        {visibleVacancies.map(v => (
+                                            <option key={v.id} value={v.id}>
+                                                {v.title} {!filters.company_id && v.company_name ? `(${v.company_name})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* 3. Min Overall Experience */}
                             <div className={`filter-field-box ${filters.overall_experience ? 'has-value' : ''}`}>
                                 <label htmlFor="experience_filter">
                                     <FiCheckCircle className="field-icon" /> Min. Experience
@@ -2133,7 +2375,7 @@ function Applicants({ admin }) {
                                         onChange={(e) => setFilters({ ...filters, overall_experience: e.target.value })}
                                     >
                                         <option value="">All Experience</option>
-                                        <option value="0 years">0 years (Freshers)</option>
+                                        <option value="0 years">Freshers (0 years)</option>
                                         <option value="0-1 years">0–1 years</option>
                                         <option value="1-2 years">1–2 years</option>
                                         <option value="3-4 years">3–4 years</option>
@@ -2144,9 +2386,34 @@ function Applicants({ admin }) {
                                 </div>
                             </div>
 
+                            {/* 4. Min Relevant Experience */}
+                            <div className={`filter-field-box ${filters.relevant_experience ? 'has-value' : ''}`}>
+                                <label htmlFor="relevant_experience_filter">
+                                    <FiAward className="field-icon" /> Relevant Exp.
+                                </label>
+                                <div className="custom-select-wrapper">
+                                    <select
+                                        id="relevant_experience_filter"
+                                        name="relevant_experience"
+                                        value={filters.relevant_experience}
+                                        onChange={(e) => setFilters({ ...filters, relevant_experience: e.target.value })}
+                                    >
+                                        <option value="">All Relevant Exp.</option>
+                                        <option value="0 years">Freshers (0 years)</option>
+                                        <option value="0-1 years">0–1 years</option>
+                                        <option value="1-2 years">1–2 years</option>
+                                        <option value="3-4 years">3–4 years</option>
+                                        <option value="5-7 years">5–7 years</option>
+                                        <option value="8-10 years">8–10 years</option>
+                                        <option value="10+ years">10+ years</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* 5. Academic Status */}
                             <div className={`filter-field-box ${filters.qualification ? 'has-value' : ''}`}>
                                 <label htmlFor="qualification_filter">
-                                    <FiFileText className="field-icon" /> Credential
+                                    <FiFileText className="field-icon" /> Academic Status
                                 </label>
                                 <div className="custom-select-wrapper">
                                     <select
@@ -2155,12 +2422,13 @@ function Applicants({ admin }) {
                                         value={filters.qualification}
                                         onChange={(e) => setFilters({ ...filters, qualification: e.target.value })}
                                     >
-                                        <option value="">Any Qual.</option>
+                                        <option value="">Any Academic Status</option>
                                         {QUALIFICATION_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                     </select>
                                 </div>
                             </div>
 
+                            {/* 6. Salary Match */}
                             <div className={`filter-field-box ${filters.salary_match ? 'has-value' : ''}`}>
                                 <label htmlFor="salary_filter">
                                     <FiTarget className="field-icon" /> Salary Match
@@ -2182,6 +2450,7 @@ function Applicants({ admin }) {
                                 </div>
                             </div>
 
+                            {/* 7. Application Status */}
                             <div className={`filter-field-box ${filters.status ? 'has-value' : ''}`}>
                                 <label htmlFor="status_filter">
                                     <FiFilter className="field-icon" /> Status
@@ -2206,6 +2475,7 @@ function Applicants({ admin }) {
                                 </div>
                             </div>
 
+                            {/* 8. Interview Date (Conditional for Shortlisted) */}
                             {filters.status === 'shortlisted' && (
                                 <div className={`filter-field-box ${filters.interview_date ? 'has-value' : ''}`}>
                                     <label htmlFor="interview_date_filter">
@@ -2224,7 +2494,8 @@ function Applicants({ admin }) {
                                 </div>
                             )}
 
-                            <div className="filter-field-box sort-field-box">
+                            {/* 9. Sort Order */}
+                            <div className={`filter-field-box sort-field-box ${filters.sortBy && filters.sortBy !== 'newest' ? 'has-value' : ''}`}>
                                 <label htmlFor="sort_by">
                                     <FiBarChart2 className="field-icon" /> Sort Order
                                 </label>
@@ -2234,13 +2505,12 @@ function Applicants({ admin }) {
                                         name="sortBy"
                                         value={filters.sortBy}
                                         onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-                                        className="sort-select-highlight"
+                                        className="sort-select-control"
                                     >
-                                        <option value="matchScore">Best Match Score</option>
-                                        <option value="highExperience">High Experience</option>
-                                        <option value="lowExperience">Low Experience</option>
                                         <option value="newest">Newest First</option>
                                         <option value="oldest">Oldest First</option>
+                                        <option value="matchScore">Highest Match Score</option>
+                                        <option value="lowestScore">Lowest Match Score</option>
                                     </select>
                                 </div>
                             </div>

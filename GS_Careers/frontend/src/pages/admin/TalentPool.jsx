@@ -269,7 +269,7 @@ function TalentPool({ admin }) {
                     <div className="h-stat-item">
                         <span className="h-label">HIGHLY QUALIFIED</span>
                         <span className="h-value">
-                            {candidates.filter(c => c.qualification === 'Masters Degree' || c.qualification === 'PhD').length}
+                            {candidates.filter(c => /master|msc|mba|phd|doctorate|postgraduate/i.test(c.qualification || '')).length}
                         </span>
                     </div>
                 </div>
@@ -439,7 +439,7 @@ function TalentPool({ admin }) {
                                                 onChange={(e) => setFilters({ ...filters, overall_experience: e.target.value })}
                                             >
                                                 <option value="">All Experience</option>
-                                                <option value="0 years">0 years (Freshers)</option>
+                                                <option value="0 years">Freshers (0 years)</option>
                                                 <option value="0-1 years">0–1 years</option>
                                                 <option value="1-2 years">1–2 years</option>
                                                 <option value="3-4 years">3–4 years</option>
