@@ -207,56 +207,6 @@ function getSettings()
                                             </tr>
                                         </table>
 
-                                        <!-- Next Steps Roadmap -->
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="margin-bottom: 28px;">
-                                            <tr>
-                                                <td style="padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
-                                                    <span style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                        Next Steps in Our Selection Process
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding-top: 16px;">
-                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
-                                                        <tr>
-                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #0f172a; color: #c8a951; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center;">
-                                                                    1
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top" style="padding-bottom: 16px;">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Profile Evaluation</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Our hiring team evaluates your experience, competencies, and qualifications against the role criteria.</div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
-                                                                    2
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top" style="padding-bottom: 16px;">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Shortlisting &amp; Direct Contact</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Shortlisted candidates will be contacted directly by our team with scheduled interview details and guidance.</div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td width="36" valign="top">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
-                                                                    3
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Talent Pool Preservation</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Your profile will also remain actively archived in our talent network for prioritized consideration for future vacancies.</div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-
                                         <!-- Sign-off -->
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
                                             <tr>
@@ -810,6 +760,8 @@ function getSettings()
     if ($auth && ($auth['role'] === 'sub_admin1' || $auth['role'] === 'sub_admin2' || $auth['role'] === 'sub_admin')) {
         unset($settings['smtp_pass'], $settings['gemini_api_key'], $settings['gemini_api_key_backup']);
     }
+
+    $settings['email_template_confirmation_body'] = removeConfirmationSelectionRoadmap($settings['email_template_confirmation_body']);
 
     jsonResponse(200, 'Settings retrieved', $settings);
 }

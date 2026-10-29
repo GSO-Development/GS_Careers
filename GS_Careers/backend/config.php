@@ -453,6 +453,12 @@ function parseEmailTemplate($template, $variables)
     return $template;
 }
 
+// Remove the retired roadmap from older confirmation templates saved in Settings.
+function removeConfirmationSelectionRoadmap($body)
+{
+    return preg_replace('/<!--\s*Next Steps Roadmap\s*-->.*?(?=<!--\s*Sign-off\s*-->)/s', '', $body);
+}
+
 function getEmailTemplate($key, $default)
 {
     try {
@@ -460,6 +466,9 @@ function getEmailTemplate($key, $default)
         $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
         $stmt->execute([$key]);
         $val = $stmt->fetchColumn();
+        if ($key === 'email_template_confirmation_body' && is_string($val)) {
+            $val = removeConfirmationSelectionRoadmap($val);
+        }
 
         // Upgrade legacy non-HTML text templates to the new premium full HTML defaults
         if ($val !== false && $val !== null && $val !== '' && strpos($key, '_body') !== false && strpos($val, '<!DOCTYPE html>') === false) {

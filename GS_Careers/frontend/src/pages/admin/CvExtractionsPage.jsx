@@ -1,3 +1,4 @@
+import useHorizontalDragScroll from '../../utils/useHorizontalDragScroll';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     FiCpu, FiCheckCircle, FiAlertCircle, FiXCircle, FiSearch,
@@ -1096,6 +1097,7 @@ const generateAiParsedCvText = (candidate, skills = [], parsedReport = null, ext
 };
 
 function CvExtractionsPage({ admin }) {
+    const tableDragScroll = useHorizontalDragScroll();
     const storedAdminData = (() => {
         try {
             return localStorage.getItem('gs_admin_data') ? JSON.parse(localStorage.getItem('gs_admin_data')) : null;
@@ -1556,7 +1558,7 @@ function CvExtractionsPage({ admin }) {
                     </div>
                 ) : (
                     <>
-                        <div className="cve-table-wrapper">
+                        <div className="cve-table-wrapper horizontal-drag-scroll" {...tableDragScroll}>
                             <table className="cve-table">
                                 <colgroup>
                                     <col style={{ width: '4%' }} />

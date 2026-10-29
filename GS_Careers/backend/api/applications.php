@@ -1002,56 +1002,6 @@ function sendConfirmationEmail($to, $name, $jobTitle, $companyName, $jobRef)
                                             </tr>
                                         </table>
 
-                                        <!-- Next Steps Roadmap -->
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="margin-bottom: 28px;">
-                                            <tr>
-                                                <td style="padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
-                                                    <span style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                        Next Steps in Our Selection Process
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding-top: 16px;">
-                                                    <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation">
-                                                        <tr>
-                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #0f172a; color: #c8a951; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center;">
-                                                                    1
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top" style="padding-bottom: 16px;">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Profile Evaluation</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Our hiring team evaluates your experience, competencies, and qualifications against the role criteria.</div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td width="36" valign="top" style="padding-bottom: 16px;">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
-                                                                    2
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top" style="padding-bottom: 16px;">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Shortlisting &amp; Direct Contact</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Shortlisted candidates will be contacted directly by our team with scheduled interview details and guidance.</div>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td width="36" valign="top">
-                                                                <div style="width: 26px; height: 26px; border-radius: 50%; background-color: #f1f5f9; color: #0f172a; font-size: 12px; font-weight: 800; line-height: 26px; text-align: center; border: 1.5px solid #cbd5e1;">
-                                                                    3
-                                                                </div>
-                                                            </td>
-                                                            <td valign="top">
-                                                                <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 3px;">Talent Pool Preservation</div>
-                                                                <div style="font-size: 13px; color: #64748b; line-height: 1.5;">Your profile will also remain actively archived in our talent network for prioritized consideration for future vacancies.</div>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-
                                         <!-- Sign-off -->
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" style="border-top: 1px solid #e2e8f0; padding-top: 24px;">
                                             <tr>
@@ -1837,34 +1787,54 @@ function handleSendInterview()
     $auditReason = "Candidate: " . $candidateName . " | Date: " . $interviewDate . " @ " . $interviewTime . " | Type: " . $interviewType . " | Location: " . $interviewLocation;
     logVacancyAction($application['vacancy_id'], $auth['admin_id'], 'interview_scheduled', $application['status'], $application['status'], $auditReason);
 
-    // Insert invited notification
+    // Insert or update invited notification (strictly deduplicated)
     try {
-        $nStmt = $db->prepare("
-            INSERT INTO notifications 
-            (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $nStmt->execute([
-            'interview_invited',
-            'Interview Invitation Sent',
-            "Interview invitation scheduled for {$candidateName} for {$application['vacancy_title']}.",
-            $applicationId,
-            $application['vacancy_id'],
-            $application['company_id'],
-            $candidateName,
-            $application['email'],
-            $application['contact_number'] ?? null,
-            $application['vacancy_title'],
-            $application['job_ref'],
-            $application['company_name'],
-            $interviewType,
-            $interviewDate,
-            $interviewTime,
-            $interviewLocation,
-            'invited'
-        ]);
+        $checkInvStmt = $db->prepare("SELECT id FROM notifications WHERE application_id = ? AND type = 'interview_invited' LIMIT 1");
+        $checkInvStmt->execute([$applicationId]);
+        $existingInv = $checkInvStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($existingInv) {
+            $uStmt = $db->prepare("
+                UPDATE notifications 
+                SET interview_type = ?, interview_date = ?, interview_time = ?, interview_location = ?, is_read = 0, created_at = NOW() 
+                WHERE id = ?
+            ");
+            $uStmt->execute([$interviewType, $interviewDate, $interviewTime, $interviewLocation, $existingInv['id']]);
+        } else {
+            $nStmt = $db->prepare("
+                INSERT INTO notifications 
+                (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                    interview_type = VALUES(interview_type),
+                    interview_date = VALUES(interview_date),
+                    interview_time = VALUES(interview_time),
+                    interview_location = VALUES(interview_location),
+                    is_read = 0,
+                    created_at = NOW()
+            ");
+            $nStmt->execute([
+                'interview_invited',
+                'Interview Invitation Sent',
+                "Interview invitation scheduled for {$candidateName} for {$application['vacancy_title']}.",
+                $applicationId,
+                $application['vacancy_id'],
+                $application['company_id'],
+                $candidateName,
+                $application['email'],
+                $application['contact_number'] ?? null,
+                $application['vacancy_title'],
+                $application['job_ref'],
+                $application['company_name'],
+                $interviewType,
+                $interviewDate,
+                $interviewTime,
+                $interviewLocation,
+                'invited'
+            ]);
+        }
     } catch (Exception $e) {
-        error_log("Failed to insert invited notification: " . $e->getMessage());
+        error_log("Failed to insert/update invited notification: " . $e->getMessage());
     }
 
     // Return immediately, then send email
@@ -1896,37 +1866,53 @@ function handleConfirmInterview()
         jsonResponse(400, 'Invalid confirmation parameters');
     }
 
-    $stmt = $db->prepare("
-        SELECT a.first_name, a.last_name, a.email, a.contact_number, a.status, a.vacancy_id, 
-               a.interview_type, a.interview_date, a.interview_time, a.interview_location,
-               v.title as vacancy_title, v.reference_number as job_ref, v.company_id, c.name as company_name 
-        FROM applications a
-        JOIN vacancies v ON a.vacancy_id = v.id
-        LEFT JOIN companies c ON v.company_id = c.id
-        WHERE a.id = ?
-    ");
-    $stmt->execute([$id]);
-    $app = $stmt->fetch();
-
-    if (!$app) {
-        jsonResponse(404, 'Application not found');
-    }
-
-    if ($app['status'] !== 'shortlisted') {
-        jsonResponse(400, 'Application is not in shortlisted state');
-    }
-
-    $stmt = $db->prepare("UPDATE applications SET interview_confirmed = ? WHERE id = ?");
-    $stmt->execute([$response, $id]);
-
-    // Audit logging candidate interview confirmation response
-    $candidateName = $app['first_name'] . ' ' . $app['last_name'];
-    $auditAction = 'interview_confirmed_' . $response;
-    $auditReason = "Candidate: " . $candidateName . " responded: " . strtoupper($response);
-    logVacancyAction($app['vacancy_id'], null, $auditAction, $app['status'], $app['status'], $auditReason);
-
-    // Insert into notifications table
+    // Atomic named lock for candidate RSVP to prevent race conditions & duplicate hits
+    $lockAcquired = false;
     try {
+        $lockStmt = $db->prepare("SELECT GET_LOCK(?, 5)");
+        $lockStmt->execute(["rsvp_lock_{$id}"]);
+        $lockAcquired = (bool)$lockStmt->fetchColumn();
+    } catch (Exception $e) {
+        // Fallback if GET_LOCK fails
+    }
+
+    try {
+        $stmt = $db->prepare("
+            SELECT a.id, a.first_name, a.last_name, a.email, a.contact_number, a.status, a.interview_confirmed, a.vacancy_id, 
+                   a.interview_type, a.interview_date, a.interview_time, a.interview_location,
+                   v.title as vacancy_title, v.reference_number as job_ref, v.company_id, c.name as company_name 
+            FROM applications a
+            JOIN vacancies v ON a.vacancy_id = v.id
+            LEFT JOIN companies c ON v.company_id = c.id
+            WHERE a.id = ?
+        ");
+        $stmt->execute([$id]);
+        $app = $stmt->fetch();
+
+        if (!$app) {
+            jsonResponse(404, 'Application not found');
+        }
+
+        if ($app['status'] !== 'shortlisted') {
+            jsonResponse(400, 'Application is not in shortlisted state');
+        }
+
+        // If candidate has already submitted this exact same response, return success without duplicating
+        if (!empty($app['interview_confirmed']) && $app['interview_confirmed'] === $response) {
+            jsonResponse(200, 'Interview confirmation already updated');
+        }
+
+        $stmt = $db->prepare("UPDATE applications SET interview_confirmed = ? WHERE id = ?");
+        $stmt->execute([$response, $id]);
+
+        // Audit logging candidate interview confirmation response
+        $candidateName = $app['first_name'] . ' ' . $app['last_name'];
+        $auditAction = 'interview_confirmed_' . $response;
+        $auditReason = "Candidate: " . $candidateName . " responded: " . strtoupper($response);
+        logVacancyAction($app['vacancy_id'], null, $auditAction, $app['status'], $app['status'], $auditReason);
+
+        // Deduplicated Notifications handling:
+        // A candidate should have at most ONE RSVP response notification.
         $nType = $response === 'yes' ? 'interview_confirmed' : 'interview_declined';
         $nTitle = $response === 'yes' ? 'Interview Confirmed' : 'Interview Declined';
         $respStatus = $response === 'yes' ? 'confirmed' : 'declined';
@@ -1934,43 +1920,89 @@ function handleConfirmInterview()
             ? "Candidate {$candidateName} has CONFIRMED attendance for the {$app['vacancy_title']} interview."
             : "Candidate {$candidateName} has DECLINED attendance for the {$app['vacancy_title']} interview.";
 
-        $nStmt = $db->prepare("
-            INSERT INTO notifications 
-            (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $nStmt->execute([
-            $nType,
-            $nTitle,
-            $nMessage,
-            $id,
-            $app['vacancy_id'],
-            $app['company_id'],
-            $candidateName,
-            $app['email'],
-            $app['contact_number'] ?? null,
-            $app['vacancy_title'],
-            $app['job_ref'],
-            $app['company_name'],
-            $app['interview_type'] ?? null,
-            $app['interview_date'] ?? null,
-            $app['interview_time'] ?? null,
-            $app['interview_location'] ?? null,
-            $respStatus
-        ]);
-    } catch (Exception $e) {
-        error_log("Failed to insert notification: " . $e->getMessage());
-    }
+        try {
+            // Find any existing response notifications for this application
+            $existingStmt = $db->prepare("
+                SELECT id FROM notifications 
+                WHERE application_id = ? AND type IN ('interview_confirmed', 'interview_declined')
+                ORDER BY id ASC
+            ");
+            $existingStmt->execute([$id]);
+            $existingIds = $existingStmt->fetchAll(PDO::FETCH_COLUMN);
 
-    // Send confirmation receipt email to the candidate
-    sendInterviewConfirmationReceiptEmail(
-        $app['email'],
-        $candidateName,
-        $app['vacancy_title'],
-        $app['company_name'],
-        $response,
-        $app['job_ref']
-    );
+            if (!empty($existingIds)) {
+                $keepId = (int)$existingIds[0];
+                // Update the existing record instead of inserting a duplicate
+                $uStmt = $db->prepare("
+                    UPDATE notifications 
+                    SET type = ?, title = ?, message = ?, response_status = ?, is_read = 0, created_at = NOW() 
+                    WHERE id = ?
+                ");
+                $uStmt->execute([$nType, $nTitle, $nMessage, $respStatus, $keepId]);
+
+                // Clean up any extra duplicate rows if they existed
+                if (count($existingIds) > 1) {
+                    $excessIds = array_slice($existingIds, 1);
+                    $inClause = implode(',', array_map('intval', $excessIds));
+                    $db->exec("DELETE FROM notification_reads WHERE notification_id IN ($inClause)");
+                    $db->exec("DELETE FROM notifications WHERE id IN ($inClause)");
+                }
+            } else {
+                // First response notification for this application
+                $nStmt = $db->prepare("
+                    INSERT INTO notifications 
+                    (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                        type = VALUES(type),
+                        title = VALUES(title),
+                        message = VALUES(message),
+                        response_status = VALUES(response_status),
+                        is_read = 0,
+                        created_at = NOW()
+                ");
+                $nStmt->execute([
+                    $nType,
+                    $nTitle,
+                    $nMessage,
+                    $id,
+                    $app['vacancy_id'],
+                    $app['company_id'],
+                    $candidateName,
+                    $app['email'],
+                    $app['contact_number'] ?? null,
+                    $app['vacancy_title'],
+                    $app['job_ref'],
+                    $app['company_name'],
+                    $app['interview_type'] ?? null,
+                    $app['interview_date'] ?? null,
+                    $app['interview_time'] ?? null,
+                    $app['interview_location'] ?? null,
+                    $respStatus
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Failed to insert/update notification: " . $e->getMessage());
+        }
+
+        // Send confirmation receipt email to the candidate
+        sendInterviewConfirmationReceiptEmail(
+            $app['email'],
+            $candidateName,
+            $app['vacancy_title'],
+            $app['company_name'],
+            $response,
+            $app['job_ref']
+        );
+
+    } finally {
+        if ($lockAcquired) {
+            try {
+                $unlockStmt = $db->prepare("SELECT RELEASE_LOCK(?)");
+                $unlockStmt->execute(["rsvp_lock_{$id}"]);
+            } catch (Exception $e) {}
+        }
+    }
 
     jsonResponse(200, 'Interview confirmation updated successfully');
 }

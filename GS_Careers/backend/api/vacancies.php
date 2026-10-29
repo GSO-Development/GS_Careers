@@ -520,12 +520,12 @@ function getCompanyPrefix($name)
         return 'GSS';
     } elseif (strpos($nameLower, 'retail') !== false) {
         return 'GSR';
-    } elseif (strpos($nameLower, 'teas') !== false) {
-        return 'ST';
+    } elseif (strpos($nameLower, 'tea') !== false || strpos($nameLower, 'teas') !== false) {
+        return 'GST';
     } elseif (strpos($nameLower, 'motors') !== false) {
         return 'SM';
-    } elseif (strpos($nameLower, 'foods') !== false) {
-        return 'SF';
+    } elseif (strpos($nameLower, 'hva') !== false || strpos($nameLower, 'foods') !== false) {
+        return 'HVA';
     } elseif (strpos($nameLower, 'property') !== false) {
         return 'SP';
     } elseif (strpos($nameLower, 'parent') !== false || strpos($nameLower, 'company ltd') !== false || strpos($nameLower, 'george steuart &') !== false) {

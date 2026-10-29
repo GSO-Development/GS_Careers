@@ -1,3 +1,4 @@
+import useHorizontalDragScroll from '../../utils/useHorizontalDragScroll';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllVacancies, deleteVacancy, updateVacancy, getCompanies, getStats, API_BASE, getApplications, assignVacancyCandidate, getVacancyAuditLog } from '../../services/api';
@@ -293,6 +294,7 @@ const renderApprovalTimeline = (v) => {
 };
 
 function ManageVacancies({ admin }) {
+    const tableDragScroll = useHorizontalDragScroll();
     const navigate = useNavigate();
     const [vacancies, setVacancies] = useState([]);
     const [companies, setCompanies] = useState([]);
@@ -798,7 +800,7 @@ function ManageVacancies({ admin }) {
                         <button className="btn btn-outline" onClick={() => { setSearchTerm(''); setCompanyFilter(''); }}>Reset Console</button>
                     </div>
                 ) : (
-                    <div className="premium-table-container">
+                    <div className="premium-table-container horizontal-drag-scroll" {...tableDragScroll}>
                         <table className="premium-table vacancies-table">
                             <thead>
                                 <tr>

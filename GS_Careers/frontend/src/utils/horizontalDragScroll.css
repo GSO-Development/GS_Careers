@@ -1,0 +1,19 @@
+/* Shared mouse-drag scrolling for admin tables. */
+.horizontal-drag-scroll {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+}
+@media (hover: hover) and (pointer: fine) {
+    .horizontal-drag-scroll { cursor: grab; }
+    .horizontal-drag-scroll [data-no-drag-scroll] { cursor: pointer; }
+}
+.horizontal-drag-scroll.is-dragging,
+.horizontal-drag-scroll.is-dragging * {
+    cursor: grabbing !important;
+    user-select: none !important;
+}
+/* Keep vacancy columns readable and allow horizontal scrolling on narrow desktops. */
+@media (min-width: 601px) {
+    .horizontal-drag-scroll .premium-table.vacancies-table { min-width: 1000px !important; }
+}

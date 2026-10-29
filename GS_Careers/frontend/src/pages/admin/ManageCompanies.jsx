@@ -1,3 +1,4 @@
+import useHorizontalDragScroll from '../../utils/useHorizontalDragScroll';
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import {
@@ -16,6 +17,8 @@ import {
 const BACKEND_ROOT = API_BASE.replace('/api', '');
 
 function ManageCompanies({ admin }) {
+    const companyTableDragScroll = useHorizontalDragScroll();
+    const locationTableDragScroll = useHorizontalDragScroll();
     const isSubAdmin = admin?.role === 'sub_admin1' || admin?.role === 'sub_admin2' || admin?.role === 'sub_admin';
     const userCompanyId = admin?.company_id ? Number(admin.company_id) : null;
 
@@ -677,7 +680,7 @@ function ManageCompanies({ admin }) {
                                 <span className="count-badge">{filteredCompanies.length} Entities Registered</span>
                             </div>
                         </div>
-                        <div className="table-wrapper-p">
+                        <div className="table-wrapper-p horizontal-drag-scroll" {...companyTableDragScroll}>
                             <table className="premium-table orchestration-table">
                                 <colgroup>
                                     <col style={{ width: '26%' }} />
@@ -801,7 +804,7 @@ function ManageCompanies({ admin }) {
                                 <span className="count-badge">{filteredLocations.length} Locations Active</span>
                             </div>
                         </div>
-                        <div className="table-wrapper-p">
+                        <div className="table-wrapper-p horizontal-drag-scroll" {...locationTableDragScroll}>
                             <table className="premium-table orchestration-table">
                                 <thead>
                                     <tr>

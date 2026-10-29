@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
     FiGrid, FiBriefcase, FiUsers, FiUserPlus, FiLogOut, 
@@ -74,21 +74,35 @@ function AdminLayout({ admin, children }) {
     }, [admin]);
 
     // Fetch live unread candidate notifications count
+    const fetchNotifCount = useCallback(async () => {
+        try {
+            const res = await getUnreadNotificationCount();
+            const count = res.data?.data?.unread_count ?? 0;
+            setUnreadNotifCount(count);
+        } catch (err) {
+            console.error('Failed to fetch unread candidate notifications count:', err);
+        }
+    }, []);
+
     useEffect(() => {
-        const fetchNotifCount = async () => {
-            try {
-                const res = await getUnreadNotificationCount();
-                const count = res.data?.data?.unread_count ?? 0;
-                setUnreadNotifCount(count);
-            } catch (err) {
-                console.error('Failed to fetch unread candidate notifications count:', err);
+        fetchNotifCount();
+        const interval = setInterval(fetchNotifCount, 25000);
+
+        const handleNotifUpdate = (e) => {
+            if (e?.detail?.unreadCount !== undefined) {
+                setUnreadNotifCount(e.detail.unreadCount);
+            } else {
+                fetchNotifCount();
             }
         };
 
-        fetchNotifCount();
-        const interval = setInterval(fetchNotifCount, 25000);
-        return () => clearInterval(interval);
-    }, [location.pathname]);
+        window.addEventListener('gs-notifications-updated', handleNotifUpdate);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('gs-notifications-updated', handleNotifUpdate);
+        };
+    }, [fetchNotifCount, location.pathname]);
 
     const handleLogout = () => {
         localStorage.removeItem('gs_admin_token');
@@ -128,7 +142,7 @@ function AdminLayout({ admin, children }) {
         navItems.push({ to: '/admin/admins', icon: <FiUserPlus />, label: 'Manage Admins', badge: null });
     }
     navItems.push({ to: '/admin/cv-extractions', icon: <FiCpu />, label: 'CV Extractions', badge: null });
-    navItems.push({ to: '/admin/notifications', icon: <FiBell />, label: 'Notifications', badge: unreadNotifCount > 0 ? unreadNotifCount : null });
+    navItems.push({ to: '/admin/notifications', icon: <FiBell />, label: 'Notifications', badge: unreadNotifCount > 0 ? (unreadNotifCount > 99 ? '99+' : unreadNotifCount) : null });
     navItems.push({ to: '/admin/settings', icon: <FiSettings />, label: 'Settings', badge: null });
 
     const currentPage = navItems.find(item => {
@@ -702,6 +716,13 @@ function AdminLayout({ admin, children }) {
                     color: #F3E5AB !important;
                 }
 
+                .sidebar-link.active .sidebar-badge {
+                    background: #ffffff !important;
+                    color: #8B1A2B !important;
+                    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+                    font-weight: 800 !important;
+                }
+
                 .sidebar-badge {
                     background: #8B1A2B;
                     color: #ffffff;
@@ -970,6 +991,11 @@ function AdminLayout({ admin, children }) {
                         min-width: 16px;
                         min-height: 16px;
                         border-radius: 50%;
+                    }
+
+                    .admin-layout.sidebar-collapsed .sidebar-link.active .sidebar-badge {
+                        background: #ffffff !important;
+                        color: #8B1A2B !important;
                     }
                     
                     .admin-layout.sidebar-collapsed .sidebar-user-card {

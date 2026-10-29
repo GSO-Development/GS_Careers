@@ -1,3 +1,4 @@
+import useHorizontalDragScroll from '../../utils/useHorizontalDragScroll';
 import { useState, useEffect } from 'react';
 import { getAllVacancyAuditLogs } from '../../services/api';
 import { formatDateTime } from '../../utils/constants';
@@ -10,6 +11,7 @@ import {
 } from 'react-icons/fi';
 
 function AuditLog({ admin }) {
+    const tableDragScroll = useHorizontalDragScroll();
     const [logs, setLogs] = useState([]);
     const [summary, setSummary] = useState({
         total: 0,
@@ -613,7 +615,7 @@ function AuditLog({ admin }) {
                         )}
                     </div>
                 ) : (
-                    <div className="premium-table-container" style={{ margin: 0, border: 'none', boxShadow: 'none', borderRadius: 0 }}>
+                    <div className="premium-table-container horizontal-drag-scroll" {...tableDragScroll} style={{ margin: 0, border: 'none', boxShadow: 'none', borderRadius: 0 }}>
                         <table className="premium-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '1000px' }}>
                             <thead>
                                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #f1f5f9' }}>

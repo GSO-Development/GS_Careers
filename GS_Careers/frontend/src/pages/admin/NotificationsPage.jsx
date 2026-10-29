@@ -87,6 +87,9 @@ function NotificationsPage({ admin }) {
             setNotifications(data.notifications || []);
             if (data.stats) {
                 setStats(data.stats);
+                window.dispatchEvent(new CustomEvent('gs-notifications-updated', {
+                    detail: { unreadCount: data.stats.unread }
+                }));
             }
             if (data.pagination) {
                 setPagination(data.pagination);
@@ -144,10 +147,15 @@ function NotificationsPage({ admin }) {
                 await markNotificationAsRead(notif.id);
             }
             // Update local state optimistically
-            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: !n.is_read } : n));
+            const newIsRead = !notif.is_read;
+            const newUnread = notif.is_read ? stats.unread + 1 : Math.max(0, stats.unread - 1);
+            setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: newIsRead } : n));
             setStats(prev => ({
                 ...prev,
-                unread: notif.is_read ? prev.unread + 1 : Math.max(0, prev.unread - 1)
+                unread: newUnread
+            }));
+            window.dispatchEvent(new CustomEvent('gs-notifications-updated', {
+                detail: { unreadCount: newUnread }
             }));
         } catch (err) {
             console.error('Failed to toggle read state:', err);
@@ -160,6 +168,9 @@ function NotificationsPage({ admin }) {
             await markAllNotificationsAsRead();
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
             setStats(prev => ({ ...prev, unread: 0 }));
+            window.dispatchEvent(new CustomEvent('gs-notifications-updated', {
+                detail: { unreadCount: 0 }
+            }));
         } catch (err) {
             console.error('Failed to mark all as read:', err);
         }
@@ -174,6 +185,7 @@ function NotificationsPage({ admin }) {
             setNotifications(prev => prev.filter(n => n.id !== id));
             if (selectedModalNotif?.id === id) setSelectedModalNotif(null);
             fetchNotifications(true);
+            window.dispatchEvent(new CustomEvent('gs-notifications-updated'));
         } catch (err) {
             console.error('Failed to delete notification:', err);
         }
@@ -184,8 +196,12 @@ function NotificationsPage({ admin }) {
         setSelectedModalNotif(notif);
         if (!notif.is_read) {
             markNotificationAsRead(notif.id).then(() => {
+                const newUnread = Math.max(0, stats.unread - 1);
                 setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
-                setStats(prev => ({ ...prev, unread: Math.max(0, prev.unread - 1) }));
+                setStats(prev => ({ ...prev, unread: newUnread }));
+                window.dispatchEvent(new CustomEvent('gs-notifications-updated', {
+                    detail: { unreadCount: newUnread }
+                }));
             }).catch(console.error);
         }
     };

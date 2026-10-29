@@ -13,6 +13,7 @@ import {
     FiAward, FiTarget, FiAlertCircle, FiXCircle, FiInfo, FiTag, FiBarChart2, FiCpu, FiHash, FiVideo, FiMapPin, FiTrash2, FiUserCheck, FiSlash, FiRotateCcw, FiAlertTriangle, FiDollarSign, FiSliders
 } from 'react-icons/fi';
 import './Applicants.css';
+import useHorizontalDragScroll from '../../utils/useHorizontalDragScroll';
 import PaginationFooter from '../../components/PaginationFooter';
 import { calculateCandidateMatchScore, calculateSalaryMatchScore, parseNumericSalary, extractCandidateMismatchReason } from '../../utils/scoreCalculator';
 
@@ -1306,6 +1307,7 @@ const parsePointDetail = (rawPoint, isMismatch, index) => {
 };
 
 function Applicants({ admin }) {
+    const tableDragScroll = useHorizontalDragScroll();
     const [searchParams] = useSearchParams();
     const [applications, setApplications] = useState([]);
     const [vacancies, setVacancies] = useState([]);
@@ -2275,20 +2277,28 @@ function Applicants({ admin }) {
                                 <span className="chips-count-dot">{activeChips.length}</span>
                             </span>
                             <div className="chips-list">
-                                {activeChips.map(chip => (
-                                    <button
-                                        key={chip.key}
-                                        type="button"
-                                        className="filter-chip"
-                                        onClick={chip.clear}
-                                        title={`Remove ${chip.label}`}
-                                    >
-                                        <span className="chip-text">{chip.label}</span>
-                                        <span className="chip-remove-circle">
-                                            <FiX size={10} />
-                                        </span>
-                                    </button>
-                                ))}
+                                {activeChips.map(chip => {
+                                    const colonIndex = chip.label.indexOf(':');
+                                    const prefix = colonIndex !== -1 ? chip.label.substring(0, colonIndex + 1) : '';
+                                    const textVal = colonIndex !== -1 ? chip.label.substring(colonIndex + 1).trim() : chip.label;
+                                    return (
+                                        <button
+                                            key={chip.key}
+                                            type="button"
+                                            className="filter-chip"
+                                            onClick={chip.clear}
+                                            title={`Remove ${chip.label}`}
+                                        >
+                                            <span className="chip-text">
+                                                {prefix && <span className="chip-prefix">{prefix} </span>}
+                                                <span className="chip-val">{textVal}</span>
+                                            </span>
+                                            <span className="chip-remove-circle">
+                                                <FiX size={11} />
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -3037,7 +3047,7 @@ function Applicants({ admin }) {
                         <button className="btn btn-outline" onClick={clearFilters}>Reset Console</button>
                     </div>
                 ) : (
-                    <div className="premium-table-container">
+                    <div className="premium-table-container applicants-drag-scroll" {...tableDragScroll}>
                         <table className="premium-table applicants-table">
                             <colgroup>
                                 {admin.role !== 'super_admin' && <col style={{ width: '38px' }} />}
@@ -3087,7 +3097,7 @@ function Applicants({ admin }) {
                                             </td>
                                         )}
                                         <td data-label="Candidate">
-                                            <div className="candidate-cell" onClick={() => setShowDetail(app)} style={{ cursor: 'pointer' }} title="Click to view candidate assessment & details">
+                                            <div className="candidate-cell" data-no-drag-scroll onClick={() => setShowDetail(app)} style={{ cursor: 'pointer' }} title="Click to view candidate assessment & details">
                                                 <div className="candidate-avatar">
                                                     {app.first_name?.[0]}{app.last_name?.[0]}
                                                 </div>
@@ -3120,7 +3130,7 @@ function Applicants({ admin }) {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td data-label="CV Match" style={{ whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => setShowDetail(app)} title="Click to view full CV vs JD assessment">
+                                        <td data-label="CV Match" data-no-drag-scroll style={{ whiteSpace: 'nowrap', cursor: 'pointer' }} onClick={() => setShowDetail(app)} title="Click to view full CV vs JD assessment">
                                             {(() => {
                                                 const scoreData = calculateCandidateMatchScore(app, vacancies);
                                                 const matchScore = scoreData.score || 0;

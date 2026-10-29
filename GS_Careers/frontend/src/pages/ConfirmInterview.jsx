@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { FiCheck, FiX, FiCalendar, FiMapPin, FiAlertCircle, FiMail } from 'react-icons/fi';
 import { confirmInterview } from '../services/api';
@@ -10,6 +10,7 @@ function ConfirmInterview() {
 
     const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error'
     const [errorMessage, setErrorMessage] = useState('');
+    const hasRequestedRef = useRef(false);
 
     useEffect(() => {
         if (!id || !response || (response !== 'yes' && response !== 'no')) {
@@ -17,6 +18,9 @@ function ConfirmInterview() {
             setErrorMessage('Invalid confirmation parameters. Please check the link from your email.');
             return;
         }
+
+        if (hasRequestedRef.current) return;
+        hasRequestedRef.current = true;
 
         confirmInterview(id, response)
             .then(() => {
