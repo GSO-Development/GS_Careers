@@ -1837,6 +1837,36 @@ function handleSendInterview()
     $auditReason = "Candidate: " . $candidateName . " | Date: " . $interviewDate . " @ " . $interviewTime . " | Type: " . $interviewType . " | Location: " . $interviewLocation;
     logVacancyAction($application['vacancy_id'], $auth['admin_id'], 'interview_scheduled', $application['status'], $application['status'], $auditReason);
 
+    // Insert invited notification
+    try {
+        $nStmt = $db->prepare("
+            INSERT INTO notifications 
+            (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $nStmt->execute([
+            'interview_invited',
+            'Interview Invitation Sent',
+            "Interview invitation scheduled for {$candidateName} for {$application['vacancy_title']}.",
+            $applicationId,
+            $application['vacancy_id'],
+            $application['company_id'],
+            $candidateName,
+            $application['email'],
+            $application['contact_number'] ?? null,
+            $application['vacancy_title'],
+            $application['job_ref'],
+            $application['company_name'],
+            $interviewType,
+            $interviewDate,
+            $interviewTime,
+            $interviewLocation,
+            'invited'
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to insert invited notification: " . $e->getMessage());
+    }
+
     // Return immediately, then send email
     jsonResponse(200, 'Interview invitation sent successfully', null, true);
 
@@ -1867,8 +1897,9 @@ function handleConfirmInterview()
     }
 
     $stmt = $db->prepare("
-        SELECT a.first_name, a.last_name, a.email, a.status, a.vacancy_id, 
-               v.title as vacancy_title, v.reference_number as job_ref, c.name as company_name 
+        SELECT a.first_name, a.last_name, a.email, a.contact_number, a.status, a.vacancy_id, 
+               a.interview_type, a.interview_date, a.interview_time, a.interview_location,
+               v.title as vacancy_title, v.reference_number as job_ref, v.company_id, c.name as company_name 
         FROM applications a
         JOIN vacancies v ON a.vacancy_id = v.id
         LEFT JOIN companies c ON v.company_id = c.id
@@ -1893,6 +1924,43 @@ function handleConfirmInterview()
     $auditAction = 'interview_confirmed_' . $response;
     $auditReason = "Candidate: " . $candidateName . " responded: " . strtoupper($response);
     logVacancyAction($app['vacancy_id'], null, $auditAction, $app['status'], $app['status'], $auditReason);
+
+    // Insert into notifications table
+    try {
+        $nType = $response === 'yes' ? 'interview_confirmed' : 'interview_declined';
+        $nTitle = $response === 'yes' ? 'Interview Confirmed' : 'Interview Declined';
+        $respStatus = $response === 'yes' ? 'confirmed' : 'declined';
+        $nMessage = $response === 'yes'
+            ? "Candidate {$candidateName} has CONFIRMED attendance for the {$app['vacancy_title']} interview."
+            : "Candidate {$candidateName} has DECLINED attendance for the {$app['vacancy_title']} interview.";
+
+        $nStmt = $db->prepare("
+            INSERT INTO notifications 
+            (type, title, message, application_id, vacancy_id, company_id, candidate_name, candidate_email, candidate_phone, vacancy_title, vacancy_ref, company_name, interview_type, interview_date, interview_time, interview_location, response_status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $nStmt->execute([
+            $nType,
+            $nTitle,
+            $nMessage,
+            $id,
+            $app['vacancy_id'],
+            $app['company_id'],
+            $candidateName,
+            $app['email'],
+            $app['contact_number'] ?? null,
+            $app['vacancy_title'],
+            $app['job_ref'],
+            $app['company_name'],
+            $app['interview_type'] ?? null,
+            $app['interview_date'] ?? null,
+            $app['interview_time'] ?? null,
+            $app['interview_location'] ?? null,
+            $respStatus
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to insert notification: " . $e->getMessage());
+    }
 
     // Send confirmation receipt email to the candidate
     sendInterviewConfirmationReceiptEmail(

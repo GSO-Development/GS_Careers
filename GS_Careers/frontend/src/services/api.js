@@ -169,4 +169,16 @@ export const extractCvAdmin = (data) => api.post('/applications.php?action=extra
 export const getExtractionSetting = () => api.get('/applications.php?action=get_extraction_setting');
 export const updateExtractionSetting = (data) => api.post('/applications.php?action=update_extraction_setting', data);
 
+// Notifications
+export const getNotifications = (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return api.get(`/notifications.php?action=list&${query}`);
+};
+export const getUnreadNotificationCount = () => api.get('/notifications.php?action=unread_count');
+export const markNotificationAsRead = (id) => api.post('/notifications.php?action=mark_read', { id });
+export const markNotificationAsUnread = (id) => api.post('/notifications.php?action=mark_unread', { id });
+export const markAllNotificationsAsRead = () => api.post('/notifications.php?action=mark_all_read');
+export const deleteNotification = (id) => api.post('/notifications.php?action=delete', { id });
+
 export default api;
+

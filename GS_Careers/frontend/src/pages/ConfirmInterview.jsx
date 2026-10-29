@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { FiCheck, FiX, FiCalendar, FiMapPin, FiAlertCircle } from 'react-icons/fi';
+import { FiCheck, FiX, FiCalendar, FiMapPin, FiAlertCircle, FiMail } from 'react-icons/fi';
 import { confirmInterview } from '../services/api';
 
 function ConfirmInterview() {

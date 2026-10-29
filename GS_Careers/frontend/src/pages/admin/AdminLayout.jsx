@@ -3,9 +3,9 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
     FiGrid, FiBriefcase, FiUsers, FiUserPlus, FiLogOut, 
     FiMenu, FiX, FiTarget, FiChevronRight, FiSettings, 
-    FiCheckCircle, FiActivity, FiChevronsLeft, FiChevronsRight, FiCpu 
+    FiCheckCircle, FiActivity, FiChevronsLeft, FiChevronsRight, FiCpu, FiBell 
 } from 'react-icons/fi';
-import { API_BASE, getPendingApprovals } from '../../services/api';
+import { API_BASE, getPendingApprovals, getUnreadNotificationCount } from '../../services/api';
 
 const BACKEND_ROOT = API_BASE.replace('/api', '');
 
@@ -19,6 +19,7 @@ function AdminLayout({ admin, children }) {
     );
     const [approvalsExpanded, setApprovalsExpanded] = useState(location.pathname.startsWith('/admin/approvals'));
     const [pendingCount, setPendingCount] = useState(0);
+    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
     // Auto-close mobile drawer on route change
     useEffect(() => {
@@ -72,6 +73,23 @@ function AdminLayout({ admin, children }) {
         }
     }, [admin]);
 
+    // Fetch live unread candidate notifications count
+    useEffect(() => {
+        const fetchNotifCount = async () => {
+            try {
+                const res = await getUnreadNotificationCount();
+                const count = res.data?.data?.unread_count ?? 0;
+                setUnreadNotifCount(count);
+            } catch (err) {
+                console.error('Failed to fetch unread candidate notifications count:', err);
+            }
+        };
+
+        fetchNotifCount();
+        const interval = setInterval(fetchNotifCount, 25000);
+        return () => clearInterval(interval);
+    }, [location.pathname]);
+
     const handleLogout = () => {
         localStorage.removeItem('gs_admin_token');
         localStorage.removeItem('gs_admin_data');
@@ -110,6 +128,7 @@ function AdminLayout({ admin, children }) {
         navItems.push({ to: '/admin/admins', icon: <FiUserPlus />, label: 'Manage Admins', badge: null });
     }
     navItems.push({ to: '/admin/cv-extractions', icon: <FiCpu />, label: 'CV Extractions', badge: null });
+    navItems.push({ to: '/admin/notifications', icon: <FiBell />, label: 'Notifications', badge: unreadNotifCount > 0 ? unreadNotifCount : null });
     navItems.push({ to: '/admin/settings', icon: <FiSettings />, label: 'Settings', badge: null });
 
     const currentPage = navItems.find(item => {
@@ -139,8 +158,46 @@ function AdminLayout({ admin, children }) {
                         {admin.role !== 'super_admin' && admin.role !== 'admin' && admin.company_name ? admin.company_name : 'George Steuart'}
                     </span>
                 </div>
-                <div className="mobile-page-badge">
-                    <span>{currentPage}</span>
+                <div className="mobile-header-right" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                        className="mobile-notif-btn"
+                        onClick={() => navigate('/admin/notifications')}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            position: 'relative',
+                            padding: '6px',
+                            color: '#475569',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                        aria-label="Candidate Notifications"
+                        title="Candidate Notifications"
+                    >
+                        <FiBell size={20} />
+                        {unreadNotifCount > 0 && (
+                            <span style={{
+                                position: 'absolute',
+                                top: '2px',
+                                right: '2px',
+                                background: '#8B1A2B',
+                                color: '#ffffff',
+                                borderRadius: '10px',
+                                padding: '1px 5px',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                lineHeight: '12px',
+                                border: '1.5px solid #ffffff'
+                            }}>
+                                {unreadNotifCount > 99 ? '99+' : unreadNotifCount}
+                            </span>
+                        )}
+                    </button>
+                    <div className="mobile-page-badge">
+                        <span>{currentPage}</span>
+                    </div>
                 </div>
             </div>
 

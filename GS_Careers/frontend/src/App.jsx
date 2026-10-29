@@ -29,6 +29,7 @@ import ApprovalTracker from './pages/admin/ApprovalTracker';
 import AuditLog from './pages/admin/AuditLog';
 import SettingsPage from './pages/admin/SettingsPage';
 import CvExtractionsPage from './pages/admin/CvExtractionsPage';
+import NotificationsPage from './pages/admin/NotificationsPage';
 
 function ProtectedRoute({ children }) {
     const [auth, setAuth] = useState(null);
@@ -91,6 +92,7 @@ function App() {
                         <AdminLayout admin={admin}>
                             <Routes>
                                 <Route path="/" element={<Dashboard admin={admin} />} />
+                                <Route path="/notifications" element={<NotificationsPage admin={admin} />} />
                                 <Route path="/vacancies" element={<ManageVacancies admin={admin} />} />
                                 <Route path="/vacancies/create" element={<CreateVacancy admin={admin} />} />
                                 <Route path="/vacancies/edit/:id" element={<CreateVacancy admin={admin} />} />
